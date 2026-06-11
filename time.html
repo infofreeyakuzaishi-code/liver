@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pococha 時給条件・配信時間マネージャー（データ保存版）</title>
+    <title>Pococha 時給条件・配信時間マネージャー（週選択版）</title>
     <style>
         :root {
             --primary-color: #00b4d8;
@@ -31,10 +31,13 @@
         header { text-align: center; margin-bottom: 15px; }
         header h1 { font-size: 1.4rem; color: #0f172a; margin-bottom: 5px; }
         
-        .month-select-container { margin: 10px 0; text-align: center; }
-        .month-select-container select {
-            font-size: 1.1rem; font-weight: bold; padding: 6px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--primary-color); cursor: pointer;
+        .select-selectors-group {
+            display: flex; justify-content: center; gap: 10px; margin: 12px 0;
         }
+        .select-selectors-group select {
+            font-size: 1rem; font-weight: bold; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--primary-color); cursor: pointer;
+        }
+        #week-selector { color: #475569; border-color: #cbd5e1; }
         
         .badge-container { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
         .badge { background: #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: #475569; }
@@ -106,9 +109,13 @@
 <div class="container">
     <header>
         <h1>ライバー配信時間マネージャー</h1>
-        <div class="month-select-container">
+        <!-- 【アップデート】月選択 & 週選択の並列グループ -->
+        <div class="select-selectors-group">
             <select id="month-selector" onchange="onMonthChange()">
                 <!-- JSで自動生成 -->
+            </select>
+            <select id="week-selector" onchange="onWeekChange()">
+                <!-- 月に応じてJSで動的に生成 -->
             </select>
         </div>
         <div class="badge-container">
@@ -121,7 +128,7 @@
 
     <!-- 今週の入力 -->
     <div class="card">
-        <div class="card-title">🗓️ ① 今週のリアルタイム入力欄</div>
+        <div class="card-title">🗓️ ① 指定週のリアルタイム入力欄</div>
         
         <div class="input-row id-row row-off" id="row-0"><span class="day-label" id="label-0">月曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(0)">4h</button><button class="ticket-btn" onclick="setDayToOff(0)">オフ</button></div></div>
         <div class="input-row id-row row-off" id="row-1"><span class="day-label" id="label-1">火曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(1)">4h</button><button class="ticket-btn" onclick="setDayToOff(1)">オフ</button></div></div>
@@ -133,20 +140,20 @@
     </div>
 
     <div class="btn-group">
-        <button class="action-main-btn save-btn" onclick="lockWeekToCalendar()">💾 今週のデータを確定保存</button>
-        <button class="action-main-btn clear-all-btn" onclick="clearAllInputs()">🗑️ 今週の入力をクリア</button>
+        <button class="action-main-btn save-btn" onclick="lockWeekToCalendar()">💾 この週のデータを確定保存</button>
+        <button class="action-main-btn clear-all-btn" onclick="clearAllInputs()">🗑️ この週の入力をクリア</button>
     </div>
 
     <!-- 進捗バーセクション -->
     <div class="card">
         <div class="card-title">🏁 ② 条件クリア状況</div>
         <div class="status-section">
-            <div class="status-header"><span>今週の合計時間（最大4h/日）</span><span class="status-time" id="week-total">0時間0分0秒</span></div>
+            <div class="status-header"><span>選択した週の合計時間</span><span class="status-time" id="week-total">0時間0分0秒</span></div>
             <div class="progress-bar-bg"><div class="progress-bar-fill" id="week-fill"></div></div>
             <div class="remain-text" id="week-remain"></div>
         </div>
         <div class="status-section" style="margin-bottom:0;">
-            <div class="status-header"><span>今月の総合累計（最大4h/日）</span><span class="status-time" id="month-total">0時間0分0秒</span></div>
+            <div class="status-header"><span>選択した月の総合累計</span><span class="status-time" id="month-total">0時間0分0秒</span></div>
             <div class="progress-bar-bg"><div class="progress-bar-fill" id="month-fill"></div></div>
             <div class="remain-text" id="month-remain"></div>
         </div>
@@ -161,9 +168,8 @@
 
 <script>
 let currentYear, currentMonth, daysInMonth, startDayOfWeek;
-let currentWeekDates = []; 
+let currentWeekDates = []; // 現在選ばれている1週間分（7マス）の日付数値の配列
 
-// ローカルストレージから保存データを読み込む（データがなければ空オブジェクト）
 let dbSavedMonthData = JSON.parse(localStorage.getItem('pco_calc_data')) || {};
 let dbRawSavedMonthData = JSON.parse(localStorage.getItem('pco_raw_data')) || {};
 
@@ -188,36 +194,75 @@ function buildMonthSelector() {
     }
 }
 
+// 【機能拡張】選ばれた月を元に「〇/〇の週〜」という選択肢を動的に生成する
+function buildWeekSelector() {
+    const weekSelector = document.getElementById('week-selector');
+    weekSelector.innerHTML = ''; // 一旦クリア
+
+    // 月曜始まりベースで、1日のある週の月曜日〜末日を含む最後の週の月曜日までを計算
+    let firstDate = new Date(currentYear, currentMonth - 1, 1);
+    let firstDayIdx = firstDate.getDay();
+    let diffToMonday = firstDayIdx === 0 ? -6 : 1 - firstDayIdx;
+    
+    // 最初の月曜日
+    let loopMonday = new Date(currentYear, currentMonth - 1, 1 + diffToMonday);
+    let endLimitDate = new Date(currentYear, currentMonth, 0); // 月の末日
+
+    let weekCount = 1;
+    let selectedIndex = 0;
+    const now = new Date();
+
+    while (loopMonday <= endLimitDate || (loopMonday.getMonth() + 1) === currentMonth) {
+        let monDateStr = `${loopMonday.getMonth() + 1}/${loopMonday.getDate()}`;
+        
+        let option = document.createElement('option');
+        option.value = loopMonday.toISOString(); // 月曜日の日付オブジェクト情報を保持
+        option.text = `第${weekCount}週 (${monDateStr}〜)`;
+        
+        // もし閲覧中なのが「現在のリアルな年月」で、かつ今日の曜日がこの週に含まれる場合はデフォルトにする
+        if (now.getFullYear() === currentYear && (now.getMonth() + 1) === currentMonth) {
+            let nextSun = new Date(loopMonday.getFullYear(), loopMonday.getMonth(), loopMonday.getDate() + 6, 23, 59, 59);
+            if (now >= loopMonday && now <= nextSun) {
+                selectedIndex = weekCount - 1;
+            }
+        }
+
+        weekSelector.appendChild(option);
+        
+        // 次の週の月曜へ移動
+        loopMonday.setDate(loopMonday.getDate() + 7);
+        weekCount++;
+    }
+
+    // デフォルト週を選択状態にする
+    if (weekSelector.options.length > selectedIndex) {
+        weekSelector.options[selectedIndex].selected = true;
+    }
+}
+
 function updateCalendarBySelected() {
     const selector = document.getElementById('month-selector');
     const [y, m] = selector.value.split('-').map(Number);
     
     currentYear = y;
     currentMonth = m;
-
     daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
     let firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
     startDayOfWeek = firstDay === 0 ? 6 : firstDay - 1;
-
-    const now = new Date();
-    if (now.getFullYear() === currentYear && (now.getMonth() + 1) === currentMonth) {
-        calculateCurrentWeekRange(now);
-    } else {
-        calculateCurrentWeekRange(new Date(currentYear, currentMonth - 1, 1));
-    }
 }
 
-function calculateCurrentWeekRange(baseDate) {
-    currentWeekDates = [];
-    const currentDayNum = baseDate.getDate();
-    let dayIdx = baseDate.getDay(); 
-    let diffToMonday = dayIdx === 0 ? -6 : 1 - dayIdx; 
+// 【機能拡張】週プルダウンが変更された時、あるいは月が切り替わり週が再配置された時に呼び出す
+function updateWeekDatesBySelectedWeek() {
+    const weekSelector = document.getElementById('week-selector');
+    if (!weekSelector.value) return;
 
-    let mondayDate = new Date(currentYear, currentMonth - 1, currentDayNum + diffToMonday);
+    let mondayDate = new Date(weekSelector.value);
+    currentWeekDates = [];
 
     for (let i = 0; i < 7; i++) {
         let d = new Date(mondayDate.getFullYear(), mondayDate.getMonth(), mondayDate.getDate() + i);
+        // カレンダー対象月と一致している日付のみ、数字を登録（月をまたぐ部分はnull）
         if (d.getMonth() + 1 === currentMonth) {
             currentWeekDates.push(d.getDate());
         } else {
@@ -236,16 +281,13 @@ function updateDayLabels() {
         if (dateNum) {
             label.innerText = `${dateNum}日(${dayNames[i]})`;
             row.style.display = "flex";
-            
-            // 【機能追加】切り替えた月の保存データがあれば、入力欄に自動セットする
             loadSavedDataToInputs(i, dateNum);
         } else {
-            row.style.display = "none";
+            row.style.display = "none"; // 月をまたぐ枠は非表示
         }
     }
 }
 
-// 保存された生データを入力フィールドに復元する関数
 function loadSavedDataToInputs(inputIndex, dateNum) {
     let dbKey = `${currentYear}-${currentMonth}`;
     let savedSec = (dbRawSavedMonthData[dbKey] && dbRawSavedMonthData[dbKey][dateNum]) ? dbRawSavedMonthData[dbKey][dateNum] : 0;
@@ -263,8 +305,17 @@ function loadSavedDataToInputs(inputIndex, dateNum) {
     }
 }
 
+// 月変更時
 function onMonthChange() {
     updateCalendarBySelected();
+    buildWeekSelector(); // 週をリビルド
+    updateWeekDatesBySelectedWeek();
+    calculateTotal();
+}
+
+// 週変更時
+function onWeekChange() {
+    updateWeekDatesBySelectedWeek();
     calculateTotal();
 }
 
@@ -283,7 +334,7 @@ function setDayToOff(index) {
 }
 
 function clearAllInputs() {
-    if (confirm('今週の入力欄をすべて0にクリアしますか？')) {
+    if (confirm('指定週の入力欄をすべて0にクリアしますか？')) {
         const hoursInputs = document.querySelectorAll('.week-hours');
         const minutesInputs = document.querySelectorAll('.week-minutes');
         const secondsInputs = document.querySelectorAll('.week-seconds');
@@ -303,7 +354,10 @@ function lockWeekToCalendar() {
     if (!dbSavedMonthData[dbKey]) dbSavedMonthData[dbKey] = Array(32).fill(0);
     if (!dbRawSavedMonthData[dbKey]) dbRawSavedMonthData[dbKey] = Array(32).fill(0);
 
-    if (confirm(`${currentYear}年${currentMonth}月の指定枠データを確定保存しますか？`)) {
+    const weekSelector = document.getElementById('week-selector');
+    const weekText = weekSelector.options[weekSelector.selectedIndex].text;
+
+    if (confirm(`${currentYear}年${currentMonth}月 【${weekText}】 のデータを確定保存しますか？`)) {
         for (let i = 0; i < 7; i++) {
             const dateNum = currentWeekDates[i];
             if (!dateNum) continue;
@@ -317,11 +371,10 @@ function lockWeekToCalendar() {
             dbSavedMonthData[dbKey][dateNum] = Math.min(rawSeconds, 4 * 3600); 
         }
 
-        // 【ここが心臓部】ブラウザの永続ストレージ（LocalStorage）に保存
         localStorage.setItem('pco_calc_data', JSON.stringify(dbSavedMonthData));
         localStorage.setItem('pco_raw_data', JSON.stringify(dbRawSavedMonthData));
 
-        alert('ブラウザにデータを保存しました！再度開いても残り続けます。');
+        alert('ブラウザにデータを保存しました！');
         calculateTotal();
     }
 }
@@ -460,6 +513,7 @@ function renderCalendarVisual(activeWeekRawValues) {
 
         let cellClass = "calendar-cell";
         if (secondsOnDay > 0) cellClass += " has-time";
+        // カレンダー上で「現在選ばれている週」の枠線をわかりやすく強調表示
         if (currentWeekDates.includes(d)) cellClass += " current-week-mod"; 
 
         let dayOfWeekIdx = (startDayOfWeek + d - 1) % 7;
@@ -490,6 +544,8 @@ function renderCalendarVisual(activeWeekRawValues) {
 window.onload = function() {
     buildMonthSelector();
     updateCalendarBySelected();
+    buildWeekSelector(); // 初回起動時に週の選択肢を作る
+    updateWeekDatesBySelectedWeek();
     calculateTotal();
 };
 </script>
