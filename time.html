@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pococha 時給条件・配信時間マネージャー（週選択版）</title>
+    <title>Pococha 時給条件・配信時間マネージャー（スマホ最適化版）</title>
     <style>
         :root {
             --primary-color: #00b4d8;
@@ -24,84 +24,117 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding: 20px 10px;
+            padding: 15px 8px; /* スマホ向けに余白を少しタイトに */
         }
 
-        .container { max-width: 540px; margin: 0 auto; }
+        .container { max-width: 540px; margin: 0 auto; width: 100%; }
         header { text-align: center; margin-bottom: 15px; }
-        header h1 { font-size: 1.4rem; color: #0f172a; margin-bottom: 5px; }
+        header h1 { font-size: 1.3rem; color: #0f172a; margin-bottom: 5px; }
         
         .select-selectors-group {
-            display: flex; justify-content: center; gap: 10px; margin: 12px 0;
+            display: flex; justify-content: center; gap: 8px; margin: 12px 0;
+            width: 100%;
         }
         .select-selectors-group select {
-            font-size: 1rem; font-weight: bold; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--primary-color); cursor: pointer;
+            font-size: 0.95rem; font-weight: bold; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--primary-color); cursor: pointer; max-width: 50%;
         }
         #week-selector { color: #475569; border-color: #cbd5e1; }
         
-        .badge-container { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
-        .badge { background: #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: #475569; }
+        .badge-container { display: flex; justify-content: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .badge { background: #e2e8f0; padding: 4px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; color: #475569; }
 
-        .btn-group { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 15px; }
+        .btn-group { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 15px; }
         .action-main-btn {
-            flex: 1; padding: 10px; font-size: 0.8rem; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; border: 1px solid var(--clear-color);
+            flex: 1; padding: 10px 4px; font-size: 0.75rem; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; border: 1px solid var(--clear-color);
         }
         .save-btn { background-color: #ecfdf5; border-color: var(--success-color); color: var(--success-color); }
         .save-btn:hover { background-color: var(--success-color); color: #fff; }
         .clear-all-btn { background-color: #fff; border-color: var(--clear-color); color: var(--clear-color); }
         .clear-all-btn:hover { background-color: var(--clear-color); color: #fff; }
 
-        .alert-banner { background-color: #eff6ff; border: 1px solid #bfdbfe; color: var(--max-color); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; font-size: 0.9rem; font-weight: bold; text-align: center; display: none; }
+        .alert-banner { background-color: #eff6ff; border: 1px solid #bfdbfe; color: var(--max-color); padding: 10px; border-radius: 12px; margin-bottom: 15px; font-size: 0.8rem; font-weight: bold; text-align: center; display: none; }
 
-        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); }
-        .card-title { font-size: 0.95rem; font-weight: bold; margin-bottom: 15px; color: #475569; display: flex; justify-content: space-between; align-items: center; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 14px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); }
+        .card-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 12px; color: #475569; }
 
-        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; transition: background-color 0.2s; padding: 4px; border-radius: 8px; }
-        .day-label { font-weight: 600; width: 75px; font-size: 0.9rem; padding-left: 4px; }
-        .day-inputs { display: flex; align-items: center; gap: 2px; }
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 4px; transition: background-color 0.2s; padding: 4px; border-radius: 8px; }
+        .day-label { font-weight: 600; width: 68px; font-size: 0.85rem; padding-left: 2px; }
+        .day-inputs { display: flex; align-items: center; gap: 1px; }
         
         input[type="number"] {
-            width: 42px; padding: 6px 2px; font-size: 0.9rem; border: 1px solid var(--border-color); border-radius: 8px; text-align: center; background: #f8fafc;
+            width: 38px; padding: 6px 2px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; background: #f8fafc;
         }
         input[type="number"]:focus { outline: none; border-color: var(--primary-color); background: #fff; }
 
-        .action-btns { display: flex; gap: 4px; }
-        .action-btns button { padding: 6px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
-        .max-btn { background-color: #eff6ff; border: 1px solid var(--max-color); color: var(--max-color); }
-        .max-btn:hover { background-color: var(--max-color); color: white; }
-        .ticket-btn { background-color: #fffbeb; border: 1px solid var(--ticket-color); color: var(--ticket-color); }
-        .ticket-btn:hover { background-color: var(--ticket-color); color: white; }
+        .action-btns { display: flex; gap: 2px; }
+        .action-btns button { padding: 6px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 10px; cursor: pointer; white-space: nowrap; border: 1px solid transparent; }
+        .max-btn { background-color: #eff6ff; border-color: var(--max-color); color: var(--max-color); }
+        .ticket-btn { background-color: #fffbeb; border-color: var(--ticket-color); color: var(--ticket-color); }
 
         .row-off input { background-color: #f1f5f9; color: #94a3b8; }
-        .row-max-capped { background-color: #f0fdf4; border-left: 4px solid var(--success-color); }
-        .row-max-capped input { border-color: #bbf7d0; background-color: #fff; }
+        .row-max-capped { background-color: #f0fdf4; border-left: 3px solid var(--success-color); }
 
-        .unit { font-size: 0.75rem; color: #64748b; margin-right: 1px; }
+        .unit { font-size: 0.7rem; color: #64748b; margin-right: 2px; margin-left: 1px; }
 
-        /* カレンダー用スタイル */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
-        .calendar-header-cell { text-align: center; font-size: 0.75rem; font-weight: bold; padding: 4px 0; color: #64748b; }
-        .calendar-cell {
-            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 52px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; position: relative;
+        /* 🔥 カレンダーのはみ出し絶対防止アルゴリズム */
+        .calendar-grid { 
+            display: grid; 
+            /* minmax(0, 1fr) でセル幅が縮むのを文字が邪魔させない */
+            grid-template-columns: repeat(7, minmax(0, 1fr)); 
+            gap: 3px; 
+            margin-top: 10px; 
+            width: 100%;
         }
-        .calendar-cell .day-num { font-size: 0.75rem; font-weight: bold; color: #64748b; }
-        .calendar-cell .day-time { font-size: 0.65rem; font-weight: 800; text-align: center; margin-top: 4px; color: #0f172a; white-space: nowrap; }
+        .calendar-header-cell { text-align: center; font-size: 0.7rem; font-weight: bold; padding: 4px 0; color: #64748b; }
+        .calendar-cell {
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 6px; 
+            min-height: 48px; 
+            padding: 3px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            position: relative;
+            overflow: hidden; /* 中身がはみ出た場合にグリッドを崩さない */
+        }
+        .calendar-cell .day-num { font-size: 0.7rem; font-weight: bold; color: #64748b; }
+        .calendar-cell .day-time { 
+            font-size: 0.6rem; 
+            font-weight: 800; 
+            text-align: center; 
+            margin-top: 3px; 
+            color: #0f172a; 
+            white-space: nowrap;
+            letter-spacing: -0.3px; /* わずかに文字間を詰めて収まりを良くする */
+        }
         .calendar-cell.has-time { background-color: #e0f2fe; border-color: #bae6fd; }
         .calendar-cell.has-time .day-time { color: #0369a1; }
-        .calendar-cell.current-week-mod { border: 2px dashed var(--primary-color); background-color: #f0fdfa; }
+        .calendar-cell.current-week-mod { border: 1.5px dashed var(--primary-color); background-color: #f0fdfa; }
         .calendar-cell.current-week-mod .day-time { color: var(--primary-color); }
         .calendar-cell.empty { background: transparent; border: none; }
 
-        .status-section { background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
-        .status-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px; }
-        .status-time { font-size: 1.25rem; font-weight: 800; color: #0f172a; }
-        .progress-bar-bg { background: #e2e8f0; border-radius: 6px; height: 8px; width: 100%; overflow: hidden; margin: 8px 0; }
+        .status-section { background: #f8fafc; padding: 10px 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+        .status-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; }
+        .status-time { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+        .progress-bar-bg { background: #e2e8f0; border-radius: 6px; height: 6px; width: 100%; overflow: hidden; margin: 6px 0; }
         .progress-bar-fill { background: var(--primary-color); height: 100%; width: 0%; transition: width 0.3s ease; }
         .progress-bar-fill.complete { background: var(--success-color); }
-        .remain-text { font-size: 0.8rem; font-weight: 600; text-align: right; }
+        .remain-text { font-size: 0.75rem; font-weight: 600; text-align: right; }
 
         .day-sat { color: #2563eb !important; }
         .day-sun { color: #dc2626 !important; }
+
+        /* 📱 画面幅が非常に狭いスマホ用の微調整（メディアクエリ） */
+        @media screen and (max-width: 390px) {
+            body { padding: 10px 4px; }
+            .card { padding: 10px; }
+            .day-label { width: 58px; font-size: 0.8rem; }
+            input[type="number"] { width: 34px; font-size: 0.8rem; }
+            .action-btns button { padding: 5px 4px; font-size: 0.65rem; }
+            .calendar-cell { min-height: 42px; padding: 2px; }
+            .calendar-cell .day-time { font-size: 0.55rem; letter-spacing: -0.5px; }
+        }
     </style>
 </head>
 <body>
@@ -109,14 +142,9 @@
 <div class="container">
     <header>
         <h1>ライバー配信時間マネージャー</h1>
-        <!-- 【アップデート】月選択 & 週選択の並列グループ -->
         <div class="select-selectors-group">
-            <select id="month-selector" onchange="onMonthChange()">
-                <!-- JSで自動生成 -->
-            </select>
-            <select id="week-selector" onchange="onWeekChange()">
-                <!-- 月に応じてJSで動的に生成 -->
-            </select>
+            <select id="month-selector" onchange="onMonthChange()"></select>
+            <select id="week-selector" onchange="onWeekChange()"></select>
         </div>
         <div class="badge-container">
             <span class="badge">週間配信上限: 19時間</span>
@@ -128,19 +156,21 @@
 
     <!-- 今週の入力 -->
     <div class="card">
-        <div class="card-title">🗓️ ① 配信時間リアルタイム入力</div>
-        
-        <div class="input-row id-row row-off" id="row-0"><span class="day-label" id="label-0">月曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(0)">4h</button><button class="ticket-btn" onclick="setDayToOff(0)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-1"><span class="day-label" id="label-1">火曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(1)">4h</button><button class="ticket-btn" onclick="setDayToOff(1)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-2"><span class="day-label" id="label-2">水曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(2)">4h</button><button class="ticket-btn" onclick="setDayToOff(2)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-3"><span class="day-label" id="label-3">木曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(3)">4h</button><button class="ticket-btn" onclick="setDayToOff(3)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-4"><span class="day-label" id="label-4">金曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(4)">4h</button><button class="ticket-btn" onclick="setDayToOff(4)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-5"><span class="day-label day-sat" id="label-5">土曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(5)">4h</button><button class="ticket-btn" onclick="setDayToOff(5)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-6"><span class="day-label day-sun" id="label-6">日曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(6)">4h</button><button class="ticket-btn" onclick="setDayToOff(6)">オフ</button></div></div>
+        <div class="card-title">🗓️ ① 指定週のリアルタイム入力欄</div>
+        <div id="input-rows-container">
+            <!-- JSで動的に表示制御されます -->
+            <div class="input-row id-row row-off" id="row-0"><span class="day-label" id="label-0">月曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(0)">4h</button><button class="ticket-btn" onclick="setDayToOff(0)">オフ</button></div></div>
+            <div class="input-row id-row row-off" id="row-1"><span class="day-label" id="label-1">火曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(1)">4h</button><button class="ticket-btn" onclick="setDayToOff(1)">オフ</button></div></div>
+            <div class="input-row id-row row-off" id="row-2"><span class="day-label" id="label-2">水曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(2)">4h</button><button class="ticket-btn" onclick="setDayToOff(2)">オフ</button></div></div>
+            <div class="input-row id-row row-off" id="row-3"><span class="day-label" id="label-3">木曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(3)">4h</button><button class="ticket-btn" onclick="setDayToOff(3)">オフ</button></div></div>
+            <div class="input-row id-row row-off" id="row-4"><span class="day-label" id="label-4">金曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(4)">4h</button><button class="ticket-btn" onclick="setDayToOff(4)">オフ</button></div></div>
+            <div class="input-row id-row row-off" id="row-5"><span class="day-label day-sat" id="label-5">土曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(5)">4h</button><button class="ticket-btn" onclick="setDayToOff(5)">オフ</button></div></div>
+            <div class="input-row id-row row-off" id="row-6"><span class="day-label day-sun" id="label-6">日曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(6)">4h</button><button class="ticket-btn" onclick="setDayToOff(6)">オフ</button></div></div>
+        </div>
     </div>
 
     <div class="btn-group">
-        <button class="action-main-btn save-btn" onclick="lockWeekToCalendar()">💾 データを確定保存</button>
+        <button class="action-main-btn save-btn" onclick="lockWeekToCalendar()">💾 この週のデータを確定保存</button>
         <button class="action-main-btn clear-all-btn" onclick="clearAllInputs()">🗑️ この週の入力をクリア</button>
     </div>
 
@@ -161,14 +191,14 @@
 
     <!-- カレンダー表示セクション -->
     <div class="card">
-        <div class="card-title">📅 ③ 月間配信カレンダー</div>
+        <div class="card-title">📅 ③ 月間配信カレンダー（当月全体俯瞰）</div>
         <div class="calendar-grid" id="calendar-body"></div>
     </div>
 </div>
 
 <script>
 let currentYear, currentMonth, daysInMonth, startDayOfWeek;
-let currentWeekDates = []; // 現在選ばれている1週間分（7マス）の日付数値の配列
+let currentWeekDates = []; 
 
 let dbSavedMonthData = JSON.parse(localStorage.getItem('pco_calc_data')) || {};
 let dbRawSavedMonthData = JSON.parse(localStorage.getItem('pco_raw_data')) || {};
@@ -194,19 +224,16 @@ function buildMonthSelector() {
     }
 }
 
-// 【機能拡張】選ばれた月を元に「〇/〇の週〜」という選択肢を動的に生成する
 function buildWeekSelector() {
     const weekSelector = document.getElementById('week-selector');
-    weekSelector.innerHTML = ''; // 一旦クリア
+    weekSelector.innerHTML = ''; 
 
-    // 月曜始まりベースで、1日のある週の月曜日〜末日を含む最後の週の月曜日までを計算
     let firstDate = new Date(currentYear, currentMonth - 1, 1);
     let firstDayIdx = firstDate.getDay();
     let diffToMonday = firstDayIdx === 0 ? -6 : 1 - firstDayIdx;
     
-    // 最初の月曜日
     let loopMonday = new Date(currentYear, currentMonth - 1, 1 + diffToMonday);
-    let endLimitDate = new Date(currentYear, currentMonth, 0); // 月の末日
+    let endLimitDate = new Date(currentYear, currentMonth, 0); 
 
     let weekCount = 1;
     let selectedIndex = 0;
@@ -216,10 +243,9 @@ function buildWeekSelector() {
         let monDateStr = `${loopMonday.getMonth() + 1}/${loopMonday.getDate()}`;
         
         let option = document.createElement('option');
-        option.value = loopMonday.toISOString(); // 月曜日の日付オブジェクト情報を保持
+        option.value = loopMonday.toISOString(); 
         option.text = `第${weekCount}週 (${monDateStr}〜)`;
         
-        // もし閲覧中なのが「現在のリアルな年月」で、かつ今日の曜日がこの週に含まれる場合はデフォルトにする
         if (now.getFullYear() === currentYear && (now.getMonth() + 1) === currentMonth) {
             let nextSun = new Date(loopMonday.getFullYear(), loopMonday.getMonth(), loopMonday.getDate() + 6, 23, 59, 59);
             if (now >= loopMonday && now <= nextSun) {
@@ -228,13 +254,10 @@ function buildWeekSelector() {
         }
 
         weekSelector.appendChild(option);
-        
-        // 次の週の月曜へ移動
         loopMonday.setDate(loopMonday.getDate() + 7);
         weekCount++;
     }
 
-    // デフォルト週を選択状態にする
     if (weekSelector.options.length > selectedIndex) {
         weekSelector.options[selectedIndex].selected = true;
     }
@@ -252,7 +275,6 @@ function updateCalendarBySelected() {
     startDayOfWeek = firstDay === 0 ? 6 : firstDay - 1;
 }
 
-// 【機能拡張】週プルダウンが変更された時、あるいは月が切り替わり週が再配置された時に呼び出す
 function updateWeekDatesBySelectedWeek() {
     const weekSelector = document.getElementById('week-selector');
     if (!weekSelector.value) return;
@@ -262,7 +284,6 @@ function updateWeekDatesBySelectedWeek() {
 
     for (let i = 0; i < 7; i++) {
         let d = new Date(mondayDate.getFullYear(), mondayDate.getMonth(), mondayDate.getDate() + i);
-        // カレンダー対象月と一致している日付のみ、数字を登録（月をまたぐ部分はnull）
         if (d.getMonth() + 1 === currentMonth) {
             currentWeekDates.push(d.getDate());
         } else {
@@ -283,7 +304,7 @@ function updateDayLabels() {
             row.style.display = "flex";
             loadSavedDataToInputs(i, dateNum);
         } else {
-            row.style.display = "none"; // 月をまたぐ枠は非表示
+            row.style.display = "none"; 
         }
     }
 }
@@ -305,15 +326,13 @@ function loadSavedDataToInputs(inputIndex, dateNum) {
     }
 }
 
-// 月変更時
 function onMonthChange() {
     updateCalendarBySelected();
-    buildWeekSelector(); // 週をリビルド
+    buildWeekSelector(); 
     updateWeekDatesBySelectedWeek();
     calculateTotal();
 }
 
-// 週変更時
 function onWeekChange() {
     updateWeekDatesBySelectedWeek();
     calculateTotal();
@@ -513,7 +532,6 @@ function renderCalendarVisual(activeWeekRawValues) {
 
         let cellClass = "calendar-cell";
         if (secondsOnDay > 0) cellClass += " has-time";
-        // カレンダー上で「現在選ばれている週」の枠線をわかりやすく強調表示
         if (currentWeekDates.includes(d)) cellClass += " current-week-mod"; 
 
         let dayOfWeekIdx = (startDayOfWeek + d - 1) % 7;
@@ -544,7 +562,7 @@ function renderCalendarVisual(activeWeekRawValues) {
 window.onload = function() {
     buildMonthSelector();
     updateCalendarBySelected();
-    buildWeekSelector(); // 初回起動時に週の選択肢を作る
+    buildWeekSelector(); 
     updateWeekDatesBySelectedWeek();
     calculateTotal();
 };
