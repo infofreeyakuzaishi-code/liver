@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pococha 時給条件・配信時間マネージャー（月切り替え版）</title>
+    <title>Pococha 時給条件・配信時間マネージャー（データ保存版）</title>
     <style>
         :root {
             --primary-color: #00b4d8;
@@ -106,10 +106,9 @@
 <div class="container">
     <header>
         <h1>ライバー配信時間マネージャー</h1>
-        <!-- 月切り替えメニュー -->
         <div class="month-select-container">
             <select id="month-selector" onchange="onMonthChange()">
-                <!-- JSで自動生成されます -->
+                <!-- JSで自動生成 -->
             </select>
         </div>
         <div class="badge-container">
@@ -118,7 +117,6 @@
         </div>
     </header>
 
-    <!-- 4時間制限のアナウンスバナー -->
     <div class="alert-banner" id="error-banner">ℹ️ 1日の配信カウント上限は4時間です（4時間以上の入力分は自動で4時間として計算されます）。</div>
 
     <!-- 今週の入力 -->
@@ -162,24 +160,21 @@
 </div>
 
 <script>
-// グローバル日付管理
 let currentYear, currentMonth, daysInMonth, startDayOfWeek;
 let currentWeekDates = []; 
 
-// 簡易データベース構造（月ごとのデータを保持：{'2026-6': Array(32).fill(0), ...}）
-let dbSavedMonthData = {};
-let dbRawSavedMonthData = {};
+// ローカルストレージから保存データを読み込む（データがなければ空オブジェクト）
+let dbSavedMonthData = JSON.parse(localStorage.getItem('pco_calc_data')) || {};
+let dbRawSavedMonthData = JSON.parse(localStorage.getItem('pco_raw_data')) || {};
 
 const dayNames = ["月", "火", "水", "木", "金", "土", "日"];
 
-// 起動時にプルダウンメニューを生成 (前後6ヶ月分)
 function buildMonthSelector() {
     const selector = document.getElementById('month-selector');
     const now = new Date();
     const thisYear = now.getFullYear();
-    const thisMonth = now.getMonth(); // 0-11
+    const thisMonth = now.getMonth(); 
 
-    // 2026年前後を含め、直感的に選択しやすいようにオプションを作成
     for (let i = -3; i <= 6; i++) {
         let d = new Date(thisYear, thisMonth + i, 1);
         let y = d.getFullYear();
@@ -188,12 +183,11 @@ function buildMonthSelector() {
         option.value = `${y}-${m}`;
         option.text = `${y}年 ${m}月`;
         
-        if (i === 0) option.selected = true; // 今月をデフォルト選択
+        if (i === 0) option.selected = true; 
         selector.appendChild(option);
     }
 }
 
-// 選択された年月をベースにカレンダー情報をリビルドする
 function updateCalendarBySelected() {
     const selector = document.getElementById('month-selector');
     const [y, m] = selector.value.split('-').map(Number);
@@ -201,20 +195,15 @@ function updateCalendarBySelected() {
     currentYear = y;
     currentMonth = m;
 
-    // 当月の日数
     daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
-    // 1日の曜日 (月曜始まりのインデックス 0:月〜6:日 に調整)
     let firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
     startDayOfWeek = firstDay === 0 ? 6 : firstDay - 1;
 
-    // その月の「今週」の範囲を算出
     const now = new Date();
     if (now.getFullYear() === currentYear && (now.getMonth() + 1) === currentMonth) {
-        // 選択された月が「リアルな今月」なら、今日の週を基準にする
         calculateCurrentWeekRange(now);
     } else {
-        // 過去・未来の月の場合は、その月の「1日〜7日」を仮の編集週として配置
         calculateCurrentWeekRange(new Date(currentYear, currentMonth - 1, 1));
     }
 }
@@ -247,21 +236,34 @@ function updateDayLabels() {
         if (dateNum) {
             label.innerText = `${dateNum}日(${dayNames[i]})`;
             row.style.display = "flex";
+            
+            // 【機能追加】切り替えた月の保存データがあれば、入力欄に自動セットする
+            loadSavedDataToInputs(i, dateNum);
         } else {
             row.style.display = "none";
         }
     }
 }
 
-// 月が手動変更された時
-function onMonthChange() {
-    // 入力欄の数値をリセット
-    const hoursInputs = document.querySelectorAll('.week-hours');
-    const minutesInputs = document.querySelectorAll('.week-minutes');
-    const secondsInputs = document.querySelectorAll('.week-seconds');
-    for (let i = 0; i < hoursInputs.length; i++) {
-        hoursInputs[i].value = 0; minutesInputs[i].value = 0; secondsInputs[i].value = 0;
+// 保存された生データを入力フィールドに復元する関数
+function loadSavedDataToInputs(inputIndex, dateNum) {
+    let dbKey = `${currentYear}-${currentMonth}`;
+    let savedSec = (dbRawSavedMonthData[dbKey] && dbRawSavedMonthData[dbKey][dateNum]) ? dbRawSavedMonthData[dbKey][dateNum] : 0;
+    
+    const hInput = document.querySelectorAll('.week-hours')[inputIndex];
+    const mInput = document.querySelectorAll('.week-minutes')[inputIndex];
+    const sInput = document.querySelectorAll('.week-seconds')[inputIndex];
+
+    if (savedSec > 0) {
+        hInput.value = Math.floor(savedSec / 3600);
+        mInput.value = Math.floor((savedSec % 3600) / 60);
+        sInput.value = savedSec % 60;
+    } else {
+        hInput.value = 0; mInput.value = 0; sInput.value = 0;
     }
+}
+
+function onMonthChange() {
     updateCalendarBySelected();
     calculateTotal();
 }
@@ -314,7 +316,12 @@ function lockWeekToCalendar() {
             dbRawSavedMonthData[dbKey][dateNum] = rawSeconds; 
             dbSavedMonthData[dbKey][dateNum] = Math.min(rawSeconds, 4 * 3600); 
         }
-        alert('カレンダーに保存しました！');
+
+        // 【ここが心臓部】ブラウザの永続ストレージ（LocalStorage）に保存
+        localStorage.setItem('pco_calc_data', JSON.stringify(dbSavedMonthData));
+        localStorage.setItem('pco_raw_data', JSON.stringify(dbRawSavedMonthData));
+
+        alert('ブラウザにデータを保存しました！再度開いても残り続けます。');
         calculateTotal();
     }
 }
@@ -377,7 +384,6 @@ function calculateTotal() {
         errorBanner.style.display = 'none';
     }
 
-    // 月間合計の算出
     let totalMonthSeconds = 0;
     for (let d = 1; d <= daysInMonth; d++) {
         if (currentWeekDates.includes(d) && activeWeekCalcValues[d] !== undefined) {
@@ -432,7 +438,6 @@ function renderCalendarVisual(activeWeekRawValues) {
 
     let dbKey = `${currentYear}-${currentMonth}`;
 
-    // 曜日ヘッダー
     dayNames.forEach((name, idx) => {
         let cl = "calendar-header-cell";
         if (idx === 5) cl += " day-sat";
@@ -440,19 +445,15 @@ function renderCalendarVisual(activeWeekRawValues) {
         calendarBody.innerHTML += `<div class="${cl}">${name}</div>`;
     });
 
-    // 空白マス
     for (let i = 0; i < startDayOfWeek; i++) {
         calendarBody.innerHTML += `<div class="calendar-cell empty"></div>`;
     }
 
-    // 1日〜末日
     for (let d = 1; d <= daysInMonth; d++) {
         let secondsOnDay = 0;
-        let isCurrentWeekMod = false;
 
         if (currentWeekDates.includes(d) && activeWeekRawValues[d] !== undefined) {
             secondsOnDay = activeWeekRawValues[d];
-            isCurrentWeekMod = (secondsOnDay > 0); 
         } else {
             secondsOnDay = (dbRawSavedMonthData[dbKey] && dbRawSavedMonthData[dbKey][d]) ? dbRawSavedMonthData[dbKey][d] : 0;
         }
