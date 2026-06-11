@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pococha 時給条件・配信時間マネージャー（暦連動版）</title>
+    <title>Pococha 時給条件・配信時間マネージャー（月切り替え版）</title>
     <style>
         :root {
             --primary-color: #00b4d8;
@@ -30,7 +30,11 @@
         .container { max-width: 540px; margin: 0 auto; }
         header { text-align: center; margin-bottom: 15px; }
         header h1 { font-size: 1.4rem; color: #0f172a; margin-bottom: 5px; }
-        header .current-month-title { font-size: 1.1rem; color: var(--primary-color); font-weight: bold; margin-top: 2px; }
+        
+        .month-select-container { margin: 10px 0; text-align: center; }
+        .month-select-container select {
+            font-size: 1.1rem; font-weight: bold; padding: 6px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--primary-color); cursor: pointer;
+        }
         
         .badge-container { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
         .badge { background: #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: #475569; }
@@ -102,10 +106,15 @@
 <div class="container">
     <header>
         <h1>ライバー配信時間マネージャー</h1>
-        <div class="current-month-title" id="calendar-title">2026年6月</div>
+        <!-- 月切り替えメニュー -->
+        <div class="month-select-container">
+            <select id="month-selector" onchange="onMonthChange()">
+                <!-- JSで自動生成されます -->
+            </select>
+        </div>
         <div class="badge-container">
-            <span class="badge">週間上限時間: 19時間</span>
-            <span class="badge">月間上限時間: 75時間</span>
+            <span class="badge">週間配信上限: 19時間</span>
+            <span class="badge">月間配信上限: 75時間</span>
         </div>
     </header>
 
@@ -155,57 +164,80 @@
 <script>
 // グローバル日付管理
 let currentYear, currentMonth, daysInMonth, startDayOfWeek;
-let currentWeekDates = []; // 今週に該当する日付（最大7つ）
+let currentWeekDates = []; 
 
-// カレンダー保存用データ (1日〜31日)
-let savedMonthData = Array(32).fill(0);
-let rawSavedMonthData = Array(32).fill(0);
+// 簡易データベース構造（月ごとのデータを保持：{'2026-6': Array(32).fill(0), ...}）
+let dbSavedMonthData = {};
+let dbRawSavedMonthData = {};
 
 const dayNames = ["月", "火", "水", "木", "金", "土", "日"];
 
-// ① 現在のリアルな日付情報からカレンダーの土台を作る関数
-function initCalendarClock() {
+// 起動時にプルダウンメニューを生成 (前後6ヶ月分)
+function buildMonthSelector() {
+    const selector = document.getElementById('month-selector');
     const now = new Date();
-    currentYear = now.getFullYear();
-    currentMonth = now.getMonth() + 1; // 0-11を1-12に変換
+    const thisYear = now.getFullYear();
+    const thisMonth = now.getMonth(); // 0-11
 
-    document.getElementById('calendar-title').innerText = `${currentYear}年${currentMonth}月`;
+    // 2026年前後を含め、直感的に選択しやすいようにオプションを作成
+    for (let i = -3; i <= 6; i++) {
+        let d = new Date(thisYear, thisMonth + i, 1);
+        let y = d.getFullYear();
+        let m = d.getMonth() + 1;
+        let option = document.createElement('option');
+        option.value = `${y}-${m}`;
+        option.text = `${y}年 ${m}月`;
+        
+        if (i === 0) option.selected = true; // 今月をデフォルト選択
+        selector.appendChild(option);
+    }
+}
 
-    // 当月の日数を取得
+// 選択された年月をベースにカレンダー情報をリビルドする
+function updateCalendarBySelected() {
+    const selector = document.getElementById('month-selector');
+    const [y, m] = selector.value.split('-').map(Number);
+    
+    currentYear = y;
+    currentMonth = m;
+
+    // 当月の日数
     daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
-    // 当月1日の曜日を取得 (0:日, 1:月, ..., 6:土) -> 月曜始まりのインデックス(0:月〜6:日)に調整
+    // 1日の曜日 (月曜始まりのインデックス 0:月〜6:日 に調整)
     let firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
     startDayOfWeek = firstDay === 0 ? 6 : firstDay - 1;
 
-    // 「今週（本日を含む月曜〜日曜）」の日付範囲を自動計算
-    calculateCurrentWeekRange(now);
+    // その月の「今週」の範囲を算出
+    const now = new Date();
+    if (now.getFullYear() === currentYear && (now.getMonth() + 1) === currentMonth) {
+        // 選択された月が「リアルな今月」なら、今日の週を基準にする
+        calculateCurrentWeekRange(now);
+    } else {
+        // 過去・未来の月の場合は、その月の「1日〜7日」を仮の編集週として配置
+        calculateCurrentWeekRange(new Date(currentYear, currentMonth - 1, 1));
+    }
 }
 
-// 今日の日付をベースに、今週の月曜日〜日曜日までの「日付(日)」を配列に格納する
-function calculateCurrentWeekRange(today) {
+function calculateCurrentWeekRange(baseDate) {
     currentWeekDates = [];
-    const currentDayNum = today.getDate();
-    let dayIdx = today.getDay(); // 0:日, 1:月...
-    let diffToMonday = dayIdx === 0 ? -6 : 1 - dayIdx; // 月曜日からの差分
+    const currentDayNum = baseDate.getDate();
+    let dayIdx = baseDate.getDay(); 
+    let diffToMonday = dayIdx === 0 ? -6 : 1 - dayIdx; 
 
     let mondayDate = new Date(currentYear, currentMonth - 1, currentDayNum + diffToMonday);
 
-    // 月曜日から日曜日までの7日間をループ
     for (let i = 0; i < 7; i++) {
         let d = new Date(mondayDate.getFullYear(), mondayDate.getMonth(), mondayDate.getDate() + i);
-        // 同じ月の場合だけ配列に日付を追加（月をまたぐ週の場合、当月分だけが対象になります）
         if (d.getMonth() + 1 === currentMonth) {
             currentWeekDates.push(d.getDate());
         } else {
-            currentWeekDates.push(null); // 当月外はnull
+            currentWeekDates.push(null); 
         }
     }
-
     updateDayLabels();
 }
 
-// 割り出された今週の日付をもとに、入力欄のラベルを書き換える
 function updateDayLabels() {
     for (let i = 0; i < 7; i++) {
         const label = document.getElementById(`label-${i}`);
@@ -216,10 +248,22 @@ function updateDayLabels() {
             label.innerText = `${dateNum}日(${dayNames[i]})`;
             row.style.display = "flex";
         } else {
-            // 月をまたいでいて今月に存在しない日は入力枠を非表示にする
             row.style.display = "none";
         }
     }
+}
+
+// 月が手動変更された時
+function onMonthChange() {
+    // 入力欄の数値をリセット
+    const hoursInputs = document.querySelectorAll('.week-hours');
+    const minutesInputs = document.querySelectorAll('.week-minutes');
+    const secondsInputs = document.querySelectorAll('.week-seconds');
+    for (let i = 0; i < hoursInputs.length; i++) {
+        hoursInputs[i].value = 0; minutesInputs[i].value = 0; secondsInputs[i].value = 0;
+    }
+    updateCalendarBySelected();
+    calculateTotal();
 }
 
 function setDayToMax(index) {
@@ -229,7 +273,6 @@ function setDayToMax(index) {
     calculateTotal();
 }
 
-// 指定曜日をオフにする関数
 function setDayToOff(index) {
     document.querySelectorAll('.week-hours')[index].value = 0;
     document.querySelectorAll('.week-minutes')[index].value = 0;
@@ -249,13 +292,16 @@ function clearAllInputs() {
     }
 }
 
-// 今週の入力値をカレンダーに固定保存する
 function lockWeekToCalendar() {
     const hoursInputs = document.querySelectorAll('.week-hours');
     const minutesInputs = document.querySelectorAll('.week-minutes');
     const secondsInputs = document.querySelectorAll('.week-seconds');
 
-    if (confirm(`今週のデータをカレンダーに確定保存しますか？`)) {
+    let dbKey = `${currentYear}-${currentMonth}`;
+    if (!dbSavedMonthData[dbKey]) dbSavedMonthData[dbKey] = Array(32).fill(0);
+    if (!dbRawSavedMonthData[dbKey]) dbRawSavedMonthData[dbKey] = Array(32).fill(0);
+
+    if (confirm(`${currentYear}年${currentMonth}月の指定枠データを確定保存しますか？`)) {
         for (let i = 0; i < 7; i++) {
             const dateNum = currentWeekDates[i];
             if (!dateNum) continue;
@@ -265,15 +311,14 @@ function lockWeekToCalendar() {
             let s = parseInt(secondsInputs[i].value) || 0;
             
             let rawSeconds = (h * 3600) + (m * 60) + s;
-            rawSavedMonthData[dateNum] = rawSeconds; 
-            savedMonthData[dateNum] = Math.min(rawSeconds, 4 * 3600); 
+            dbRawSavedMonthData[dbKey][dateNum] = rawSeconds; 
+            dbSavedMonthData[dbKey][dateNum] = Math.min(rawSeconds, 4 * 3600); 
         }
         alert('カレンダーに保存しました！');
         calculateTotal();
     }
 }
 
-// メイン計算ロジック
 function calculateTotal() {
     const WEEK_LIMIT_SEC = 19 * 3600;
     const MONTH_LIMIT_SEC = 75 * 3600;
@@ -289,6 +334,10 @@ function calculateTotal() {
     
     let activeWeekRawValues = {};
     let activeWeekCalcValues = {};
+
+    let dbKey = `${currentYear}-${currentMonth}`;
+    if (!dbSavedMonthData[dbKey]) dbSavedMonthData[dbKey] = Array(32).fill(0);
+    if (!dbRawSavedMonthData[dbKey]) dbRawSavedMonthData[dbKey] = Array(32).fill(0);
 
     for (let i = 0; i < 7; i++) {
         const dateNum = currentWeekDates[i];
@@ -328,13 +377,13 @@ function calculateTotal() {
         errorBanner.style.display = 'none';
     }
 
-    // 月間合計
+    // 月間合計の算出
     let totalMonthSeconds = 0;
     for (let d = 1; d <= daysInMonth; d++) {
-        if (currentWeekDates.includes(d)) {
-            totalMonthSeconds += (activeWeekCalcValues[d] || 0);
+        if (currentWeekDates.includes(d) && activeWeekCalcValues[d] !== undefined) {
+            totalMonthSeconds += activeWeekCalcValues[d];
         } else {
-            totalMonthSeconds += savedMonthData[d];
+            totalMonthSeconds += dbSavedMonthData[dbKey][d] || 0;
         }
     }
 
@@ -354,11 +403,11 @@ function calculateTotal() {
     const weekRemain = document.getElementById('week-remain');
     if (weekPercent >= 100) {
         weekFill.style.width = '100%'; weekFill.classList.add('complete');
-        weekRemain.innerText = '今週の条件クリア！✨'; weekRemain.style.color = 'var(--success-color)';
+        weekRemain.innerText = '週間配信上限をクリア！✨'; weekRemain.style.color = 'var(--success-color)';
     } else {
         weekFill.style.width = `${weekPercent}%`; weekFill.classList.remove('complete');
         const rem = formatFromSeconds(Math.max(0, WEEK_LIMIT_SEC - currentWeekCalcSeconds));
-        weekRemain.innerText = `週ノルマまであと: ${rem.h}時間${rem.m}分`; weekRemain.style.color = '#475569';
+        weekRemain.innerText = `上限まであと: ${rem.h}時間${rem.m}分`; weekRemain.style.color = '#475569';
     }
 
     // 月バー
@@ -367,22 +416,23 @@ function calculateTotal() {
     const monthRemain = document.getElementById('month-remain');
     if (monthPercent >= 100) {
         monthFill.style.width = '100%'; monthFill.classList.add('complete');
-        monthRemain.innerText = '今月の条件クリア！🎉'; monthRemain.style.color = 'var(--success-color)';
+        monthRemain.innerText = '月間配信上限をクリア！🎉'; monthRemain.style.color = 'var(--success-color)';
     } else {
         monthFill.style.width = `${monthPercent}%`; monthFill.classList.remove('complete');
         const rem = formatFromSeconds(Math.max(0, MONTH_LIMIT_SEC - totalMonthSeconds));
-        monthRemain.innerText = `月ノルマまであと: ${rem.h}時間${rem.m}分`; monthRemain.style.color = '#475569';
+        monthRemain.innerText = `上限まであと: ${rem.h}時間${rem.m}分`; monthRemain.style.color = '#475569';
     }
 
     renderCalendarVisual(activeWeekRawValues);
 }
 
-// リアル暦に基づいたカレンダーのレンダリング
 function renderCalendarVisual(activeWeekRawValues) {
     const calendarBody = document.getElementById('calendar-body');
     calendarBody.innerHTML = '';
 
-    // 曜日ヘッダー配置
+    let dbKey = `${currentYear}-${currentMonth}`;
+
+    // 曜日ヘッダー
     dayNames.forEach((name, idx) => {
         let cl = "calendar-header-cell";
         if (idx === 5) cl += " day-sat";
@@ -390,28 +440,27 @@ function renderCalendarVisual(activeWeekRawValues) {
         calendarBody.innerHTML += `<div class="${cl}">${name}</div>`;
     });
 
-    // 1日の曜日までの空白マスを配置
+    // 空白マス
     for (let i = 0; i < startDayOfWeek; i++) {
         calendarBody.innerHTML += `<div class="calendar-cell empty"></div>`;
     }
 
-    // 1日〜末日までを描画
+    // 1日〜末日
     for (let d = 1; d <= daysInMonth; d++) {
         let secondsOnDay = 0;
         let isCurrentWeekMod = false;
 
-        if (currentWeekDates.includes(d)) {
-            secondsOnDay = activeWeekRawValues[d] || 0;
-            isCurrentWeekMod = true;
+        if (currentWeekDates.includes(d) && activeWeekRawValues[d] !== undefined) {
+            secondsOnDay = activeWeekRawValues[d];
+            isCurrentWeekMod = (secondsOnDay > 0); 
         } else {
-            secondsOnDay = rawSavedMonthData[d] || 0;
+            secondsOnDay = (dbRawSavedMonthData[dbKey] && dbRawSavedMonthData[dbKey][d]) ? dbRawSavedMonthData[dbKey][d] : 0;
         }
 
         let cellClass = "calendar-cell";
         if (secondsOnDay > 0) cellClass += " has-time";
-        if (isCurrentWeekMod) cellClass += " current-week-mod";
+        if (currentWeekDates.includes(d)) cellClass += " current-week-mod"; 
 
-        // 正確な曜日を取得して色付け
         let dayOfWeekIdx = (startDayOfWeek + d - 1) % 7;
         let numClass = "day-num";
         if (dayOfWeekIdx === 5) numClass += " day-sat";
@@ -437,9 +486,9 @@ function renderCalendarVisual(activeWeekRawValues) {
     }
 }
 
-// 起動時にカレンダー情報を初期化
 window.onload = function() {
-    initCalendarClock();
+    buildMonthSelector();
+    updateCalendarBySelected();
     calculateTotal();
 };
 </script>
