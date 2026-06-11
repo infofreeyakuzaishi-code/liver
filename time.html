@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pococha 時給条件・配信時間マネージャー（4hキャップ版）</title>
+    <title>Pococha 時給条件・配信時間マネージャー（暦連動版）</title>
     <style>
         :root {
             --primary-color: #00b4d8;
@@ -30,6 +30,7 @@
         .container { max-width: 540px; margin: 0 auto; }
         header { text-align: center; margin-bottom: 15px; }
         header h1 { font-size: 1.4rem; color: #0f172a; margin-bottom: 5px; }
+        header .current-month-title { font-size: 1.1rem; color: var(--primary-color); font-weight: bold; margin-top: 2px; }
         
         .badge-container { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
         .badge { background: #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: #475569; }
@@ -43,20 +44,18 @@
         .clear-all-btn { background-color: #fff; border-color: var(--clear-color); color: var(--clear-color); }
         .clear-all-btn:hover { background-color: var(--clear-color); color: #fff; }
 
-        /* 上限通知バナー（常時ではなく、4h超えがある時だけ自動表示） */
         .alert-banner { background-color: #eff6ff; border: 1px solid #bfdbfe; color: var(--max-color); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; font-size: 0.9rem; font-weight: bold; text-align: center; display: none; }
 
         .card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); }
         .card-title { font-size: 0.95rem; font-weight: bold; margin-bottom: 15px; color: #475569; display: flex; justify-content: space-between; align-items: center; }
 
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; transition: background-color 0.2s; padding: 4px; border-radius: 8px; }
-        .day-label { font-weight: 600; width: 65px; font-size: 0.9rem; padding-left: 4px; }
+        .day-label { font-weight: 600; width: 75px; font-size: 0.9rem; padding-left: 4px; }
         .day-inputs { display: flex; align-items: center; gap: 2px; }
         
-        input[type="number"], select {
+        input[type="number"] {
             width: 42px; padding: 6px 2px; font-size: 0.9rem; border: 1px solid var(--border-color); border-radius: 8px; text-align: center; background: #f8fafc;
         }
-        select { width: auto; padding: 6px 8px; }
         input[type="number"]:focus { outline: none; border-color: var(--primary-color); background: #fff; }
 
         .action-btns { display: flex; gap: 4px; }
@@ -66,9 +65,8 @@
         .ticket-btn { background-color: #fffbeb; border: 1px solid var(--ticket-color); color: var(--ticket-color); }
         .ticket-btn:hover { background-color: var(--ticket-color); color: white; }
 
-        /* 状態ごとの行の背景変化 */
         .row-off input { background-color: #f1f5f9; color: #94a3b8; }
-        .row-max-capped { background-color: #f0fdf4; border-left: 4px solid var(--success-color); } /* 4時間ジャストまたはそれ以上 */
+        .row-max-capped { background-color: #f0fdf4; border-left: 4px solid var(--success-color); }
         .row-max-capped input { border-color: #bbf7d0; background-color: #fff; }
 
         .unit { font-size: 0.75rem; color: #64748b; margin-right: 1px; }
@@ -80,11 +78,12 @@
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 52px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; position: relative;
         }
         .calendar-cell .day-num { font-size: 0.75rem; font-weight: bold; color: #64748b; }
-        .calendar-cell .day-time { font-size: 0.7rem; font-weight: 800; text-align: center; margin-top: 4px; color: #0f172a; }
+        .calendar-cell .day-time { font-size: 0.65rem; font-weight: 800; text-align: center; margin-top: 4px; color: #0f172a; white-space: nowrap; }
         .calendar-cell.has-time { background-color: #e0f2fe; border-color: #bae6fd; }
         .calendar-cell.has-time .day-time { color: #0369a1; }
         .calendar-cell.current-week-mod { border: 2px dashed var(--primary-color); background-color: #f0fdfa; }
         .calendar-cell.current-week-mod .day-time { color: var(--primary-color); }
+        .calendar-cell.empty { background: transparent; border: none; }
 
         .status-section { background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
         .status-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px; }
@@ -103,25 +102,12 @@
 <div class="container">
     <header>
         <h1>ライバー配信時間マネージャー</h1>
+        <div class="current-month-title" id="calendar-title">2026年6月</div>
         <div class="badge-container">
-            <span class="badge">週間配信上限: 19時間</span>
-            <span class="badge">月間配信上限: 75時間</span>
+            <span class="badge">週間上限時間: 19時間</span>
+            <span class="badge">月間上限時間: 75時間</span>
         </div>
     </header>
-
-    <!-- 週の切り替えコントロール -->
-    <div class="card" style="padding: 15px;">
-        <div class="input-row" style="margin: 0;">
-            <span class="day-label" style="width: auto; font-size: 0.95rem;">📅 今週の該当週を設定:</span>
-            <select id="week-selector" onchange="changeWeekScope()">
-                <option value="1">第1週 (1日〜7日)</option>
-                <option value="2">第2週 (8日〜14日)</option>
-                <option value="3">第3週 (15日〜21日)</option>
-                <option value="4">第4週 (22日〜28日)</option>
-                <option value="5">第5週 (29日〜末日)</option>
-            </select>
-        </div>
-    </div>
 
     <!-- 4時間制限のアナウンスバナー -->
     <div class="alert-banner" id="error-banner">ℹ️ 1日の配信カウント上限は4時間です（4時間以上の入力分は自動で4時間として計算されます）。</div>
@@ -130,13 +116,13 @@
     <div class="card">
         <div class="card-title">🗓️ ① 今週のリアルタイム入力欄</div>
         
-        <div class="input-row id-row row-off" id="row-0"><span class="day-label" id="label-0">月曜(日)</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(0)">4h</button><button class="ticket-btn" onclick="setDayToOff(0)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-1"><span class="day-label" id="label-1">火曜(日)</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(1)">4h</button><button class="ticket-btn" onclick="setDayToOff(1)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-2"><span class="day-label" id="label-2">水曜(日)</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(2)">4h</button><button class="ticket-btn" onclick="setDayToOff(2)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-3"><span class="day-label" id="label-3">木曜(日)</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(3)">4h</button><button class="ticket-btn" onclick="setDayToOff(3)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-4"><span class="day-label" id="label-4">金曜(日)</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(4)">4h</button><button class="ticket-btn" onclick="setDayToOff(4)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-5"><span class="day-label day-sat" id="label-5">土曜(日)</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(5)">4h</button><button class="ticket-btn" onclick="setDayToOff(5)">オフ</button></div></div>
-        <div class="input-row id-row row-off" id="row-6"><span class="day-label day-sun" id="label-6">日曜(日)</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(6)">4h</button><button class="ticket-btn" onclick="setDayToOff(6)">オフ</button></div></div>
+        <div class="input-row id-row row-off" id="row-0"><span class="day-label" id="label-0">月曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(0)">4h</button><button class="ticket-btn" onclick="setDayToOff(0)">オフ</button></div></div>
+        <div class="input-row id-row row-off" id="row-1"><span class="day-label" id="label-1">火曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(1)">4h</button><button class="ticket-btn" onclick="setDayToOff(1)">オフ</button></div></div>
+        <div class="input-row id-row row-off" id="row-2"><span class="day-label" id="label-2">水曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(2)">4h</button><button class="ticket-btn" onclick="setDayToOff(2)">オフ</button></div></div>
+        <div class="input-row id-row row-off" id="row-3"><span class="day-label" id="label-3">木曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(3)">4h</button><button class="ticket-btn" onclick="setDayToOff(3)">オフ</button></div></div>
+        <div class="input-row id-row row-off" id="row-4"><span class="day-label" id="label-4">金曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(4)">4h</button><button class="ticket-btn" onclick="setDayToOff(4)">オフ</button></div></div>
+        <div class="input-row id-row row-off" id="row-5"><span class="day-label day-sat" id="label-5">土曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(5)">4h</button><button class="ticket-btn" onclick="setDayToOff(5)">オフ</button></div></div>
+        <div class="input-row id-row row-off" id="row-6"><span class="day-label day-sun" id="label-6">日曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(6)">4h</button><button class="ticket-btn" onclick="setDayToOff(6)">オフ</button></div></div>
     </div>
 
     <div class="btn-group">
@@ -167,50 +153,73 @@
 </div>
 
 <script>
-// カレンダーに保存される過去のデータ (日単位の最大4時間でキャップされた秒数: 1日〜31日)
-let savedMonthData = Array(32).fill(0);
-// ライバーが実際に入力した生データ（表示用：最大制限なし）
-let rawSavedMonthData = Array(32).fill(0);
+// グローバル日付管理
+let currentYear, currentMonth, daysInMonth, startDayOfWeek;
+let currentWeekDates = []; // 今週に該当する日付（最大7つ）
 
-const weekDateMap = {
-    1: [1, 2, 3, 4, 5, 6, 7],
-    2: [8, 9, 10, 11, 12, 13, 14],
-    3: [15, 16, 17, 18, 19, 20, 21],
-    4: [22, 23, 24, 25, 26, 27, 28],
-    5: [29, 30, 31]
-};
+// カレンダー保存用データ (1日〜31日)
+let savedMonthData = Array(32).fill(0);
+let rawSavedMonthData = Array(32).fill(0);
 
 const dayNames = ["月", "火", "水", "木", "金", "土", "日"];
 
-function getSelectedWeek() {
-    return parseInt(document.getElementById('week-selector').value);
+// ① 現在のリアルな日付情報からカレンダーの土台を作る関数
+function initCalendarClock() {
+    const now = new Date();
+    currentYear = now.getFullYear();
+    currentMonth = now.getMonth() + 1; // 0-11を1-12に変換
+
+    document.getElementById('calendar-title').innerText = `${currentYear}年${currentMonth}月`;
+
+    // 当月の日数を取得
+    daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+    // 当月1日の曜日を取得 (0:日, 1:月, ..., 6:土) -> 月曜始まりのインデックス(0:月〜6:日)に調整
+    let firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
+    startDayOfWeek = firstDay === 0 ? 6 : firstDay - 1;
+
+    // 「今週（本日を含む月曜〜日曜）」の日付範囲を自動計算
+    calculateCurrentWeekRange(now);
 }
 
+// 今日の日付をベースに、今週の月曜日〜日曜日までの「日付(日)」を配列に格納する
+function calculateCurrentWeekRange(today) {
+    currentWeekDates = [];
+    const currentDayNum = today.getDate();
+    let dayIdx = today.getDay(); // 0:日, 1:月...
+    let diffToMonday = dayIdx === 0 ? -6 : 1 - dayIdx; // 月曜日からの差分
+
+    let mondayDate = new Date(currentYear, currentMonth - 1, currentDayNum + diffToMonday);
+
+    // 月曜日から日曜日までの7日間をループ
+    for (let i = 0; i < 7; i++) {
+        let d = new Date(mondayDate.getFullYear(), mondayDate.getMonth(), mondayDate.getDate() + i);
+        // 同じ月の場合だけ配列に日付を追加（月をまたぐ週の場合、当月分だけが対象になります）
+        if (d.getMonth() + 1 === currentMonth) {
+            currentWeekDates.push(d.getDate());
+        } else {
+            currentWeekDates.push(null); // 当月外はnull
+        }
+    }
+
+    updateDayLabels();
+}
+
+// 割り出された今週の日付をもとに、入力欄のラベルを書き換える
 function updateDayLabels() {
-    const currentWeek = getSelectedWeek();
-    const dates = weekDateMap[currentWeek];
-    
     for (let i = 0; i < 7; i++) {
         const label = document.getElementById(`label-${i}`);
         const row = document.getElementById(`row-${i}`);
-        if (dates[i]) {
-            label.innerText = `${dates[i]}日(${dayNames[i]})`;
+        const dateNum = currentWeekDates[i];
+
+        if (dateNum) {
+            label.innerText = `${dateNum}日(${dayNames[i]})`;
             row.style.display = "flex";
         } else {
+            // 月をまたいでいて今月に存在しない日は入力枠を非表示にする
             row.style.display = "none";
         }
     }
-}
-
-function changeWeekScope() {
-    updateDayLabels();
-    const hoursInputs = document.querySelectorAll('.week-hours');
-    const minutesInputs = document.querySelectorAll('.week-minutes');
-    const secondsInputs = document.querySelectorAll('.week-seconds');
-    for (let i = 0; i < hoursInputs.length; i++) {
-        hoursInputs[i].value = 0; minutesInputs[i].value = 0; secondsInputs[i].value = 0;
-    }
-    calculateTotal();
 }
 
 function setDayToMax(index) {
@@ -220,6 +229,7 @@ function setDayToMax(index) {
     calculateTotal();
 }
 
+// 指定曜日をオフにする関数
 function setDayToOff(index) {
     document.querySelectorAll('.week-hours')[index].value = 0;
     document.querySelectorAll('.week-minutes')[index].value = 0;
@@ -239,31 +249,31 @@ function clearAllInputs() {
     }
 }
 
-// 確定保存時も、計算用(キャップ)と表示用(生の数値)を分けて保存する
+// 今週の入力値をカレンダーに固定保存する
 function lockWeekToCalendar() {
-    const currentWeek = getSelectedWeek();
-    const dates = weekDateMap[currentWeek];
     const hoursInputs = document.querySelectorAll('.week-hours');
     const minutesInputs = document.querySelectorAll('.week-minutes');
     const secondsInputs = document.querySelectorAll('.week-seconds');
 
-    if (confirm(`第${currentWeek}週のデータをカレンダーに確定保存しますか？`)) {
-        for (let i = 0; i < dates.length; i++) {
-            const dateNum = dates[i];
+    if (confirm(`今週のデータをカレンダーに確定保存しますか？`)) {
+        for (let i = 0; i < 7; i++) {
+            const dateNum = currentWeekDates[i];
+            if (!dateNum) continue;
+
             let h = parseInt(hoursInputs[i].value) || 0;
             let m = parseInt(minutesInputs[i].value) || 0;
             let s = parseInt(secondsInputs[i].value) || 0;
             
             let rawSeconds = (h * 3600) + (m * 60) + s;
-            rawSavedMonthData[dateNum] = rawSeconds; // 生データを保存
-            savedMonthData[dateNum] = Math.min(rawSeconds, 4 * 3600); // 4h制限した計算データを保存
+            rawSavedMonthData[dateNum] = rawSeconds; 
+            savedMonthData[dateNum] = Math.min(rawSeconds, 4 * 3600); 
         }
         alert('カレンダーに保存しました！');
         calculateTotal();
     }
 }
 
-// 計算ロジック
+// メイン計算ロジック
 function calculateTotal() {
     const WEEK_LIMIT_SEC = 19 * 3600;
     const MONTH_LIMIT_SEC = 75 * 3600;
@@ -275,16 +285,15 @@ function calculateTotal() {
     const errorBanner = document.getElementById('error-banner');
     
     let hasCappedDay = false;
-    let currentWeekCalcSeconds = 0; // 4h制限後の今週合計
+    let currentWeekCalcSeconds = 0;
     
-    const currentWeek = getSelectedWeek();
-    const currentWeekDates = weekDateMap[currentWeek];
+    let activeWeekRawValues = {};
+    let activeWeekCalcValues = {};
 
-    let activeWeekRawValues = {}; // カレンダー表示用の生データ
-    let activeWeekCalcValues = {}; // 計算用のキャップデータ
-
-    for (let i = 0; i < currentWeekDates.length; i++) {
+    for (let i = 0; i < 7; i++) {
         const dateNum = currentWeekDates[i];
+        if (!dateNum) continue;
+
         let h = parseInt(hoursInputs[i].value) || 0;
         let m = parseInt(minutesInputs[i].value) || 0;
         let s = parseInt(secondsInputs[i].value) || 0;
@@ -294,13 +303,12 @@ function calculateTotal() {
 
         const row = document.getElementById(`row-${i}`);
         
-        // 4時間を超えているか判定
         if (dayRawSeconds >= DAY_MAX_SEC) {
-            dayCalcSeconds = DAY_MAX_SEC; // 裏側の計算は4時間に固定
+            dayCalcSeconds = DAY_MAX_SEC;
             row.classList.remove('row-off');
-            row.classList.add('row-max-capped'); // 上限達成の緑背景にする
+            row.classList.add('row-max-capped');
             if (dayRawSeconds > DAY_MAX_SEC) {
-                hasCappedDay = true; // 4時間を「超えて」入力されている場合
+                hasCappedDay = true;
             }
         } else if (dayRawSeconds > 0) {
             row.classList.remove('row-off', 'row-max-capped');
@@ -314,18 +322,17 @@ function calculateTotal() {
         activeWeekCalcValues[dateNum] = dayCalcSeconds;
     }
 
-    // 4時間以上の入力があればバナーを表示
     if (hasCappedDay) {
         errorBanner.style.display = 'block';
     } else {
         errorBanner.style.display = 'none';
     }
 
-    // 月全体の総合計を算出 (保存済み制限データ ＋ 今週リアルタイム制限データ)
+    // 月間合計
     let totalMonthSeconds = 0;
-    for (let d = 1; d <= 31; d++) {
+    for (let d = 1; d <= daysInMonth; d++) {
         if (currentWeekDates.includes(d)) {
-            totalMonthSeconds += activeWeekCalcValues[d];
+            totalMonthSeconds += (activeWeekCalcValues[d] || 0);
         } else {
             totalMonthSeconds += savedMonthData[d];
         }
@@ -338,11 +345,10 @@ function calculateTotal() {
         return { h, m, s, text: `${h}時間${m}分${s}秒` };
     }
 
-    // 画面表示更新
     document.getElementById('week-total').innerText = formatFromSeconds(currentWeekCalcSeconds).text;
     document.getElementById('month-total').innerText = formatFromSeconds(totalMonthSeconds).text;
 
-    // 週ゲージ
+    // 週バー
     let weekPercent = (currentWeekCalcSeconds / WEEK_LIMIT_SEC) * 100;
     const weekFill = document.getElementById('week-fill');
     const weekRemain = document.getElementById('week-remain');
@@ -351,11 +357,11 @@ function calculateTotal() {
         weekRemain.innerText = '今週の条件クリア！✨'; weekRemain.style.color = 'var(--success-color)';
     } else {
         weekFill.style.width = `${weekPercent}%`; weekFill.classList.remove('complete');
-        const rem = formatFromSeconds(WEEK_LIMIT_SEC - currentWeekSeconds);
+        const rem = formatFromSeconds(Math.max(0, WEEK_LIMIT_SEC - currentWeekCalcSeconds));
         weekRemain.innerText = `週ノルマまであと: ${rem.h}時間${rem.m}分`; weekRemain.style.color = '#475569';
     }
 
-    // 月ゲージ
+    // 月バー
     let monthPercent = (totalMonthSeconds / MONTH_LIMIT_SEC) * 100;
     const monthFill = document.getElementById('month-fill');
     const monthRemain = document.getElementById('month-remain');
@@ -364,18 +370,19 @@ function calculateTotal() {
         monthRemain.innerText = '今月の条件クリア！🎉'; monthRemain.style.color = 'var(--success-color)';
     } else {
         monthFill.style.width = `${monthPercent}%`; monthFill.classList.remove('complete');
-        const rem = formatFromSeconds(MONTH_LIMIT_SEC - totalMonthSeconds);
+        const rem = formatFromSeconds(Math.max(0, MONTH_LIMIT_SEC - totalMonthSeconds));
         monthRemain.innerText = `月ノルマまであと: ${rem.h}時間${rem.m}分`; monthRemain.style.color = '#475569';
     }
 
-    renderCalendarVisual(activeWeekRawValues, currentWeekDates);
+    renderCalendarVisual(activeWeekRawValues);
 }
 
-// カレンダー描画（ここでも「実際に入力された生の時間」を表示する仕様にします）
-function renderCalendarVisual(activeWeekRawValues, currentWeekDates) {
+// リアル暦に基づいたカレンダーのレンダリング
+function renderCalendarVisual(activeWeekRawValues) {
     const calendarBody = document.getElementById('calendar-body');
     calendarBody.innerHTML = '';
 
+    // 曜日ヘッダー配置
     dayNames.forEach((name, idx) => {
         let cl = "calendar-header-cell";
         if (idx === 5) cl += " day-sat";
@@ -383,7 +390,13 @@ function renderCalendarVisual(activeWeekRawValues, currentWeekDates) {
         calendarBody.innerHTML += `<div class="${cl}">${name}</div>`;
     });
 
-    for (let d = 1; d <= 31; d++) {
+    // 1日の曜日までの空白マスを配置
+    for (let i = 0; i < startDayOfWeek; i++) {
+        calendarBody.innerHTML += `<div class="calendar-cell empty"></div>`;
+    }
+
+    // 1日〜末日までを描画
+    for (let d = 1; d <= daysInMonth; d++) {
         let secondsOnDay = 0;
         let isCurrentWeekMod = false;
 
@@ -391,24 +404,23 @@ function renderCalendarVisual(activeWeekRawValues, currentWeekDates) {
             secondsOnDay = activeWeekRawValues[d] || 0;
             isCurrentWeekMod = true;
         } else {
-            secondsOnDay = rawSavedMonthData[d] || 0; // 保存された生データを表示
+            secondsOnDay = rawSavedMonthData[d] || 0;
         }
 
         let cellClass = "calendar-cell";
         if (secondsOnDay > 0) cellClass += " has-time";
         if (isCurrentWeekMod) cellClass += " current-week-mod";
 
-        let dayIdx = (d - 1) % 7;
+        // 正確な曜日を取得して色付け
+        let dayOfWeekIdx = (startDayOfWeek + d - 1) % 7;
         let numClass = "day-num";
-        if (dayIdx === 5) numClass += " day-sat";
-        if (dayIdx === 6) numClass += " day-sun";
+        if (dayOfWeekIdx === 5) numClass += " day-sat";
+        if (dayOfWeekIdx === 6) numClass += " day-sun";
 
         let timeStr = "";
         if (secondsOnDay > 0) {
             const h = Math.floor(secondsOnDay / 3600);
             const m = Math.floor((secondsOnDay % 3600) / 60);
-            
-            // 4時間を超えている場合はカレンダーの表記に「+」などをつけてあげると親切
             if (secondsOnDay > 4 * 3600) {
                 timeStr = m > 0 ? `${h}h${m}m(上限)` : `${h}h(上限)`;
             } else {
@@ -425,8 +437,9 @@ function renderCalendarVisual(activeWeekRawValues, currentWeekDates) {
     }
 }
 
+// 起動時にカレンダー情報を初期化
 window.onload = function() {
-    updateDayLabels();
+    initCalendarClock();
     calculateTotal();
 };
 </script>
