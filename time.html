@@ -128,7 +128,7 @@
 
     <!-- 今週の入力 -->
     <div class="card">
-        <div class="card-title">🗓️ ① 指定週のリアルタイム入力欄</div>
+        <div class="card-title">🗓️ ① 配信時間リアルタイム入力</div>
         
         <div class="input-row id-row row-off" id="row-0"><span class="day-label" id="label-0">月曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(0)">4h</button><button class="ticket-btn" onclick="setDayToOff(0)">オフ</button></div></div>
         <div class="input-row id-row row-off" id="row-1"><span class="day-label" id="label-1">火曜</span><div class="day-inputs"><input type="number" class="week-hours" min="0" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><div class="action-btns"><button class="max-btn" onclick="setDayToMax(1)">4h</button><button class="ticket-btn" onclick="setDayToOff(1)">オフ</button></div></div>
@@ -140,7 +140,7 @@
     </div>
 
     <div class="btn-group">
-        <button class="action-main-btn save-btn" onclick="lockWeekToCalendar()">💾 この週のデータを確定保存</button>
+        <button class="action-main-btn save-btn" onclick="lockWeekToCalendar()">💾 データを確定保存</button>
         <button class="action-main-btn clear-all-btn" onclick="clearAllInputs()">🗑️ この週の入力をクリア</button>
     </div>
 
@@ -161,7 +161,7 @@
 
     <!-- カレンダー表示セクション -->
     <div class="card">
-        <div class="card-title">📅 ③ 月間配信カレンダー（当月全体俯瞰）</div>
+        <div class="card-title">📅 ③ 月間配信カレンダー</div>
         <div class="calendar-grid" id="calendar-body"></div>
     </div>
 </div>
