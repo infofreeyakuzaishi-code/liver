@@ -13,7 +13,8 @@
             --card-bg: #ffffff;
             --text-color: #1e293b;
             --border-color: #cbd5e1;
-            --ticket-color: #f59e0b; /* おやチケ用のオレンジ */
+            --ticket-color: #f59e0b;
+            --clear-color: #64748b; /* クリアボタン用グレー */
         }
 
         * {
@@ -59,6 +60,30 @@
             font-size: 0.8rem;
             font-weight: bold;
             color: #475569;
+        }
+
+        /* オールクリアボタンのスタイル */
+        .clear-all-container {
+            text-align: right;
+            margin-bottom: 15px;
+        }
+
+        .clear-all-btn {
+            background-color: #fff;
+            border: 1px solid var(--clear-color);
+            color: var(--clear-color);
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        .clear-all-btn:hover {
+            background-color: var(--clear-color);
+            color: #fff;
         }
 
         .alert-banner {
@@ -131,7 +156,6 @@
             background: #fff;
         }
 
-        /* おやチケ・オフボタンのスタイル */
         .ticket-btn {
             background-color: #fffbeb;
             border: 1px solid var(--ticket-color);
@@ -150,7 +174,6 @@
             color: white;
         }
 
-        /* お休み状態の行のスタイル */
         .row-off input {
             background-color: #f1f5f9;
             color: #94a3b8;
@@ -236,6 +259,11 @@
         </div>
     </header>
 
+    <!-- オールクリアボタン -->
+    <div class="clear-all-container">
+        <button class="clear-all-btn" onclick="clearAllInputs()">🗑️ すべての数値をリセット</button>
+    </div>
+
     <div class="alert-banner" id="error-banner">
         ⚠️ 1日の配信カウント上限は4時間までです！
     </div>
@@ -260,19 +288,12 @@
     <div class="card">
         <div class="card-title">🗓️ ② 今週の配信スケジュール</div>
         
-        <!-- 各曜日に「おやチケ/オフ」ボタンを設置 -->
         <div class="input-row" id="row-0"><span class="day-label">月曜日</span><div class="day-inputs"><input type="number" class="week-hours" min="0" max="4" value="4" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><button class="ticket-btn" onclick="setDayToOff(0)">おやチケ/オフ</button></div>
-        
         <div class="input-row" id="row-1"><span class="day-label">火曜日</span><div class="day-inputs"><input type="number" class="week-hours" min="0" max="4" value="4" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><button class="ticket-btn" onclick="setDayToOff(1)">おやチケ/オフ</button></div>
-        
         <div class="input-row" id="row-2"><span class="day-label">水曜日</span><div class="day-inputs"><input type="number" class="week-hours" min="0" max="4" value="4" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><button class="ticket-btn" onclick="setDayToOff(2)">おやチケ/オフ</button></div>
-        
         <div class="input-row" id="row-3"><span class="day-label">木曜日</span><div class="day-inputs"><input type="number" class="week-hours" min="0" max="4" value="4" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><button class="ticket-btn" onclick="setDayToOff(3)">おやチケ/オフ</button></div>
-        
         <div class="input-row" id="row-4"><span class="day-label">金曜日</span><div class="day-inputs"><input type="number" class="week-hours" min="0" max="4" value="4" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><button class="ticket-btn" onclick="setDayToOff(4)">おやチケ/オフ</button></div>
-        
         <div class="input-row" id="row-5"><span class="day-label day-sat">土曜日</span><div class="day-inputs"><input type="number" class="week-hours" min="0" max="4" value="4" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><button class="ticket-btn" onclick="setDayToOff(5)">おやチケ/オフ</button></div>
-        
         <div class="input-row" id="row-6"><span class="day-label day-sun">日曜日</span><div class="day-inputs"><input type="number" class="week-hours" min="0" max="4" value="0" oninput="calculateTotal()"><span class="unit">h</span><input type="number" class="week-minutes" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">m</span><input type="number" class="week-seconds" min="0" max="59" value="0" oninput="calculateTotal()"><span class="unit">s</span></div><button class="ticket-btn" onclick="setDayToOff(6)">おやチケ/オフ</button></div>
     </div>
 
@@ -310,6 +331,30 @@
 </div>
 
 <script>
+// すべての入力をゼロにする関数
+function clearAllInputs() {
+    if (confirm('すべての入力値をリセットして0にしますか？')) {
+        // 先週までの累計をクリア
+        document.getElementById('past-hours').value = 0;
+        document.getElementById('past-minutes').value = 0;
+        document.getElementById('past-seconds').value = 0;
+
+        // 曜日ごとの入力をクリア
+        const hoursInputs = document.querySelectorAll('.week-hours');
+        const minutesInputs = document.querySelectorAll('.week-minutes');
+        const secondsInputs = document.querySelectorAll('.week-seconds');
+
+        for (let i = 0; i < hoursInputs.length; i++) {
+            hoursInputs[i].value = 0;
+            minutesInputs[i].value = 0;
+            secondsInputs[i].value = 0;
+            document.getElementById(`row-${i}`).classList.add('row-off');
+        }
+
+        calculateTotal();
+    }
+}
+
 // 指定された曜日を0リセットする関数
 function setDayToOff(index) {
     const hoursInputs = document.querySelectorAll('.week-hours');
@@ -317,15 +362,11 @@ function setDayToOff(index) {
     const secondsInputs = document.querySelectorAll('.week-seconds');
     const row = document.getElementById(`row-${index}`);
 
-    // 値をすべて0にする
     hoursInputs[index].value = 0;
     minutesInputs[index].value = 0;
     secondsInputs[index].value = 0;
 
-    // お休みと分かるように見た目のクラスを付与
     row.classList.add('row-off');
-
-    // 再計算
     calculateTotal();
 }
 
@@ -347,7 +388,6 @@ function calculateTotal() {
         let m = parseInt(minutesInputs[i].value) || 0;
         let s = parseInt(secondsInputs[i].value) || 0;
 
-        // 手入力で数字を増やした場合はお休みクラスを外す
         const row = document.getElementById(`row-${i}`);
         if (h > 0 || m > 0 || s > 0) {
             row.classList.remove('row-off');
@@ -421,7 +461,7 @@ function calculateTotal() {
     }
 
     // --- 月プログレス制御 ---
-    let monthPercent = (grandTotalMinutes / MONTH_LIMIT_SEC) * 100;
+    let monthPercent = (grandTotalSeconds / MONTH_LIMIT_SEC) * 100;
     const monthFill = document.getElementById('month-fill');
     const monthRemain = document.getElementById('month-remain');
     
