@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6分カウントアップタイマー</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#00FF00; /* クロマキー用グリーン */
+    overflow:hidden;
+    width:100vw;
+    height:100vh;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#timer{
+    position:fixed;
+    top:40px;
+    right:50px;
+
+    font-size:100px;
+    font-weight:900;
+    color:white;
+
+    /* 黒縁 */
+    text-shadow:
+        -4px -4px 0 #000,
+         4px -4px 0 #000,
+        -4px  4px 0 #000,
+         4px  4px 0 #000,
+         0px  0px 12px rgba(0,0,0,0.6);
+
+    user-select:none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="timer">00:00</div>
+
+<script>
+const timer = document.getElementById("timer");
+
+let seconds = 0;
+let interval = null;
+
+function formatTime(sec){
+    const min = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(min).padStart(2,"0")
+         + ":"
+         + String(s).padStart(2,"0");
+}
+
+function updateTimer(){
+    timer.textContent = formatTime(seconds);
+
+    if(seconds >= 360){
+        clearInterval(interval);
+        return;
+    }
+
+    seconds++;
+}
+
+// 開始
+updateTimer();
+interval = setInterval(updateTimer,1000);
+
+// スペースキーでリスタート
+document.addEventListener("keydown",(e)=>{
+    if(e.code === "Space"){
+        clearInterval(interval);
+        seconds = 0;
+        updateTimer();
+        interval = setInterval(updateTimer,1000);
+    }
+});
+</script>
+
+</body>
+</html>
