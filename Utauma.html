@@ -3,184 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【採点対象楽曲】2026 Summer 検索システム</title>
+    <title>楽曲リスト検索システム</title>
     <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            font-size: 24px;
-            color: #2c3e50;
-            margin-bottom: 30px;
-        }
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        input[type="text"]:focus {
-            border-color: #3498db;
-        }
-        .stats {
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #666;
-            text-align: right;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-        th {
-            background-color: #f8f9fa;
-            color: #2c3e50;
-            font-weight: bold;
-        }
-        .no-result {
-            text-align: center;
-            padding: 20px;
-            color: #999;
-        }
-        .highlight {
-            background-color: #ffeb3b;
-            font-weight: bold;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 16px;
-            color: #3498db;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f8fafc; color: #1e293b; }
+        .container { max-width: 600px; margin: 20px auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); }
+        h1 { font-size: 20px; text-align: center; color: #0f172a; margin-bottom: 20px; font-weight: 700; }
+        .search-box { width: 100%; padding: 14px 20px; font-size: 16px; border: 2px solid #cbd5e1; border-radius: 30px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        .search-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        .status { font-size: 13px; color: #64748b; margin: 15px 0 10px 10px; font-weight: 600; }
+        .results-list { max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+        .result-item { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: 15px; line-height: 1.5; }
+        .result-item:last-child { border-bottom: none; }
+        .match-text { background-color: #fef08a; padding: 1px 3px; border-radius: 4px; }
+        .loading { text-align: center; padding: 40px; color: #64748b; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>【採点対象楽曲】2026 Summer 検索システム</h1>
+    <h1>🎵 楽曲リスト 高速検索</h1>
+    <div id="loading" class="loading">⏳ 14,000件のデータを読み込み中...</div>
     
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="歌手名、曲名、または番号を入力（部分一致）" disabled>
+    <div id="searchSection" style="display: none;">
+        <input type="text" id="searchInput" class="search-box" placeholder="歌手名や曲名を入力...">
+        <div id="status" class="status"></div>
+        <div id="results" class="results-list"></div>
     </div>
-    
-    <div class="stats" id="stats">データを読み込み中...</div>
-    
-    <table id="resultTable">
-        <thead>
-            <tr>
-                <th style="width: 15%;">番号</th>
-                <th style="width: 45%;">曲名</th>
-                <th style="width: 40%;">歌手名</th>
-            </tr>
-        </thead>
-        <tbody id="resultBody">
-            <tr><td colspan="3" class="loading">楽曲データベース（14,470曲）をロードしています...</td></tr>
-        </tbody>
-    </table>
 </div>
 
 <script>
-let songDatabase = [];
-
-// 外部JSONファイルから14,470曲のデータを読み込む
-async function loadDatabase() {
-    try {
-        const response = await fetch('songs.json');
-        songDatabase = await response.json();
-        
-        // ロード完了後に検索入力を有効化
-        const searchInput = document.getElementById('searchInput');
-        searchInput.disabled = false;
-        searchInput.placeholder = "歌手名、曲名、または番号を入力してください";
-        
-        performSearch();
-        searchInput.addEventListener('input', performSearch);
-    } catch (error) {
-        document.getElementById('stats').textContent = "データの読み込みに失敗しました。";
-        document.getElementById('resultBody').innerHTML = `<tr><td colspan="3" class="no-result">songs.json が正しく配置されているか確認してください。</td></tr>`;
-    }
-}
-
-function highlightText(text, keyword) {
-    if (!keyword) return text;
-    // 特殊文字をエスケープ
-    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(${escapedKeyword})`, 'gi');
-    return text.replace(regex, '<span class="highlight">$1</span>');
-}
-
-function performSearch() {
+    let songs = [];
+    const loadingEl = document.getElementById('loading');
+    const searchSectionEl = document.getElementById('searchSection');
     const searchInput = document.getElementById('searchInput');
-    const resultBody = document.getElementById('resultBody');
-    const stats = document.getElementById('stats');
-    
-    const keyword = searchInput.value.trim().toLowerCase();
-    resultBody.innerHTML = '';
-    
-    // 高速フィルタリング
-    const filtered = songDatabase.filter(song => {
-        return (song.title && song.title.toLowerCase().includes(keyword)) || 
-               (song.artist && song.artist.toLowerCase().includes(keyword)) ||
-               (song.id && song.id.toString().includes(keyword));
-    });
-    
-    stats.textContent = `該当件数: ${filtered.length}件 / 総楽曲数: ${songDatabase.length}件`;
-    
-    if (filtered.length === 0) {
-        resultBody.innerHTML = `<tr><td colspan="3" class="no-result">該当する楽曲が見つかりませんでした。</td></tr>`;
-        return;
-    }
-    
-    // 大量ヒット時のブラウザフリーズ防止（最大200件まで描画）
-    const displayLimit = 200;
-    const displayList = filtered.slice(0, displayLimit);
-    
-    displayList.forEach(song => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${highlightText(song.id.toString(), keyword)}</td>
-            <td>${highlightText(song.title || '', keyword)}</td>
-            <td>${highlightText(song.artist || '', keyword)}</td>
-        `;
-        resultBody.appendChild(row);
-    });
-    
-    if (filtered.length > displayLimit) {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="3" class="no-result">件数が多いため最初の${displayLimit}件のみ表示しています。文字を追加して絞り込んでください。</td></tr>`;
-        resultBody.appendChild(row);
-    }
-}
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
 
-// 起動時にロードを実行
-document.addEventListener('DOMContentLoaded', loadDatabase);
+    // 起動時にjsonデータを一発で読み込む
+    async function loadData() {
+        try {
+            const response = await fetch('songs.json');
+            songs = await response.json();
+            loadingEl.style.display = 'none';
+            searchSectionEl.style.display = 'block';
+            statusEl.textContent = `準備完了！全 ${songs.length.toLocaleString()} 件から検索できます`;
+        } catch (error) {
+            loadingEl.textContent = '❌ データの読み込みに失敗しました。songs.jsonが同じ場所にあるか確認してください。';
+            console.error(error);
+        }
+    }
+
+    // 検索処理（1万4千件をミリ秒で検索）
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        resultsEl.innerHTML = '';
+
+        if (!query) {
+            statusEl.textContent = `全 ${songs.length.toLocaleString()} 件から検索できます`;
+            return;
+        }
+
+        // すべての項目を合体させて検索（Excelの列名が何であっても対応可能）
+        const filtered = songs.filter(item => {
+            const allText = Object.values(item).join(' ').toLowerCase();
+            return allText.includes(query);
+        });
+
+        statusEl.textContent = `検索結果: ${filtered.length.toLocaleString()} 件ヒット`;
+
+        if (filtered.length === 0) {
+            resultsEl.innerHTML = '<div style="padding: 30px; color: #94a3b8; text-align: center;">見つかりませんでした</div>';
+            return;
+        }
+
+        // 画面に結果を表示
+        const fragment = document.createDocumentFragment();
+        filtered.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            
+            // Excelのデータを綺麗に並べる（列の順番に合わせます）
+            const displayValues = Object.entries(item).map(([key, val]) => `<strong>${key}:</strong> ${val}`);
+            div.innerHTML = displayValues.join(' | ');
+            
+            fragment.appendChild(div);
+        });
+        resultsEl.appendChild(fragment);
+    });
+
+    loadData();
 </script>
 
 </body>
