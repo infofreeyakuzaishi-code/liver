@@ -40,7 +40,6 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 130, 246, 0.05);
         }
 
-        /* 天才デザイナーによるタイポグラフィ */
         h1 {
             font-size: 26px;
             text-align: center;
@@ -67,7 +66,7 @@
             position: relative;
         }
 
-        /* サイバー感あふれる極上入力フォーム */
+        /* ✨ 何もない時もさりげなく煌めく検索ボックス */
         .search-box {
             width: 100%;
             padding: 18px 28px;
@@ -77,29 +76,74 @@
             border-radius: 50px;
             box-sizing: border-box;
             outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: rgba(15, 23, 42, 0.6);
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            
+            /* アニメーションの設定 */
+            animation: ambientGlow 4s ease-in-out infinite;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* 呼吸するような優美な明滅（常時） */
+        @keyframes ambientGlow {
+            0%, 100% {
+                border-color: rgba(255, 255, 255, 0.08);
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 4px rgba(139, 92, 246, 0.05);
+            }
+            50% {
+                border-color: rgba(139, 92, 246, 0.3);
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 16px rgba(139, 92, 246, 0.15);
+            }
+        }
+
+        /* フォーカス時はアニメーションを止めて強烈に発光 */
         .search-box:focus {
+            animation: none;
             border-color: #8b5cf6;
             background: rgba(15, 23, 42, 0.8);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 20px rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 24px rgba(139, 92, 246, 0.3);
         }
+
         .search-box::placeholder {
             color: #475569;
         }
 
-        /* 流れるようなステータス表示 */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0 8px 8px;
+        }
+        .filter-tab {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 0.03em;
+        }
+        .filter-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }
+        .filter-tab.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: #8b5cf6;
+            color: #c084fc;
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+        }
+
         .status {
             font-size: 13px;
             color: var(--text-secondary);
-            margin: 16px 0 16px 16px;
+            margin: 12px 0 16px 12px;
             font-weight: 500;
             letter-spacing: 0.02em;
         }
         
-        /* 次世代UIインラインコントロール */
         .btn-container {
             display: none;
             padding: 12px 20px;
@@ -136,35 +180,19 @@
             transform-origin: bottom right;
             transition: transform 0.25s ease-out;
         }
-        .action-btn:hover {
-            color: #22d3ee;
-        }
-        .action-btn:hover::after {
-            transform: scaleX(1);
-            transform-origin: bottom left;
-        }
+        .action-btn:hover { color: #22d3ee; }
+        .action-btn:hover::after { transform: scaleX(1); transform-origin: bottom left; }
         
-        /* リストアイテムの極上デザイン */
         .results-list {
-            max-height: 55vh;
+            max-height: 50vh;
             overflow-y: auto;
             border-radius: var(--radius-md);
             padding-right: 4px;
         }
-        /* スクロールバーのカスタマイズ */
-        .results-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        .results-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .results-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        .results-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+        .results-list::-webkit-scrollbar { width: 6px; }
+        .results-list::-webkit-scrollbar-track { background: transparent; }
+        .results-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        .results-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
         .result-item {
             padding: 18px 20px;
@@ -177,9 +205,7 @@
             margin-bottom: 4px;
             border-radius: 12px;
         }
-        .result-item:last-child {
-            border-bottom: none;
-        }
+        .result-item:last-child { border-bottom: none; }
         .result-item:hover {
             background: rgba(255, 255, 255, 0.05);
             transform: translateY(-2px);
@@ -240,15 +266,20 @@
     <div class="notice-text">提出の際は元のリストも必ずご確認ください</div>
     
     <div class="search-wrapper">
-        <input type="text" id="searchInput" class="search-box" placeholder="曲名 や 歌手名 で瞬時に検索...">
+        <input type="text" id="searchInput" class="search-box" placeholder="キーワードを入力...">
+        
+        <div class="filter-tabs">
+            <div class="filter-tab active" data-mode="all">全部から検索</div>
+            <div class="filter-tab" data-mode="title">曲名のみ</div>
+            <div class="filter-tab" data-mode="artist">歌手名のみ</div>
+        </div>
+
         <div id="status" class="status">システム初期化中...</div>
         
-        <!-- ① もしかしてボタンを表示するエリア -->
         <div id="suggestionArea" class="btn-container">
             💡 お探しの曲が見つからない？ <button id="suggestionBtn" class="action-btn">ひらがな・カタカナもまとめて再検索</button>
         </div>
         
-        <!-- ② 拡張検索を解除するエリア -->
         <div id="clearArea" class="btn-container" style="border-color: rgba(249, 115, 22, 0.2);">
             ✨ 表記の揺れを含めた拡張検索モード <button id="clearBtn" class="action-btn" style="color: var(--accent-orange);">通常の検索に戻す</button>
         </div>
@@ -257,7 +288,6 @@
     </div>
 </div>
 
-<!-- 楽曲データを文字列として直接埋め込み -->
 <script id="rawData" type="text/plain">
 ="歌⼿名"	="番号"	="楽曲名"
 ="あぁ!"	="1"	="FIRST KISS"
@@ -14922,6 +14952,9 @@ Ever Getting Back Together (Japanese Ver.)"
 ="三代⽬ J Soul Brothers from EXILE TRIBE"	=""	="銀河鉄道999"
 </script>
 <script>
+    let currentMode = 'all';
+    let isExtendedMode = false;
+
     function normalizeText(text) {
         return text
             .toLowerCase()
@@ -14955,10 +14988,11 @@ Ever Getting Back Together (Japanese Ver.)"
     const clearArea = document.getElementById('clearArea');
     const clearBtn = document.getElementById('clearBtn');
     const resultsEl = document.getElementById('results');
+    const filterTabs = document.querySelectorAll('.filter-tab');
 
     statusEl.innerHTML = `READY // オンラインデータベースに接続（全 ${songs.length.toLocaleString()} 件）`;
 
-    function runNormalSearch() {
+    function executeSearch() {
         const query = searchInput.value.trim();
         
         if (!query) {
@@ -14969,24 +15003,38 @@ Ever Getting Back Together (Japanese Ver.)"
             return;
         }
 
-        suggestionArea.style.display = 'block';
-        clearArea.style.display = 'none';
-
-        const lowerQuery = query.toLowerCase();
-        const filtered = songs.filter(song => 
-            song.artist.toLowerCase().includes(lowerQuery) || 
-            song.title.toLowerCase().includes(lowerQuery)
-        );
-
-        renderResults(filtered, false);
+        if (isExtendedMode) {
+            suggestionArea.style.display = 'none';
+            clearArea.style.display = 'block';
+            
+            const normalizedQuery = normalizeText(query);
+            const extendedFiltered = songs.filter(song => {
+                if (currentMode === 'title') return song.normalizedTitle.includes(normalizedQuery);
+                if (currentMode === 'artist') return song.normalizedArtist.includes(normalizedQuery);
+                return song.normalizedArtist.includes(normalizedQuery) || song.normalizedTitle.includes(normalizedQuery);
+            });
+            renderResults(extendedFiltered, true);
+        } else {
+            suggestionArea.style.display = 'block';
+            clearArea.style.display = 'none';
+            
+            const lowerQuery = query.toLowerCase();
+            const filtered = songs.filter(song => {
+                if (currentMode === 'title') return song.title.toLowerCase().includes(lowerQuery);
+                if (currentMode === 'artist') return song.artist.toLowerCase().includes(lowerQuery);
+                return song.artist.toLowerCase().includes(lowerQuery) || song.title.toLowerCase().includes(lowerQuery);
+            });
+            renderResults(filtered, false);
+        }
     }
 
     function renderResults(filtered, isExtended = false) {
         resultsEl.innerHTML = '';
         
-        let statusText = `HIT // ${filtered.length.toLocaleString()} 件の楽曲を検出`;
+        let modeText = currentMode === 'title' ? '【曲名絞り込み】' : currentMode === 'artist' ? '【歌手名絞り込み】' : '';
+        let statusText = `HIT // ${modeText}${filtered.length.toLocaleString()} 件の楽曲を検出`;
         if (isExtended) {
-            statusText = `EXTENDED MATCH // 表記揺れを含む ${filtered.length.toLocaleString()} 件を検出`;
+            statusText = `EXTENDED MATCH // ${modeText}表記揺れ含む ${filtered.length.toLocaleString()} 件を検出`;
         }
         statusEl.innerHTML = statusText;
 
@@ -15010,32 +15058,36 @@ Ever Getting Back Together (Japanese Ver.)"
                     <div class="song-title">${song.title}</div>
                     <div class="song-id">ID: ${song.id}</div>
                 </div>
-                <div class="song-artist">🎤 ${song.artist}</div>
+                <div class="song-artist">🎙 ${song.artist}</div>
             `;
             fragment.appendChild(div);
         });
         resultsEl.appendChild(fragment);
     }
 
-    searchInput.addEventListener('input', runNormalSearch);
-
-    suggestionBtn.addEventListener('click', () => {
-        const query = searchInput.value.trim();
-        if (!query) return;
-
-        const normalizedQuery = normalizeText(query);
-        const extendedFiltered = songs.filter(song => 
-            song.normalizedArtist.includes(normalizedQuery) || 
-            song.normalizedTitle.includes(normalizedQuery)
-        );
-
-        renderResults(extendedFiltered, true);
-        
-        suggestionArea.style.display = 'none';
-        clearArea.style.display = 'block';
+    searchInput.addEventListener('input', () => {
+        isExtendedMode = false;
+        executeSearch();
     });
 
-    clearBtn.addEventListener('click', runNormalSearch);
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            filterTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentMode = tab.getAttribute('data-mode');
+            executeSearch();
+        });
+    });
+
+    suggestionBtn.addEventListener('click', () => {
+        isExtendedMode = true;
+        executeSearch();
+    });
+
+    clearBtn.addEventListener('click', () => {
+        isExtendedMode = false;
+        executeSearch();
+    });
 </script>
 
 </body>
