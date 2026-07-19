@@ -6,58 +6,251 @@
     <title>歌うま2026summer楽曲リスト検索</title>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-light: #eff6ff;
-            --text-main: #0f172a;
-            --text-sub: #475569;
-            --bg: #f8fafc;
-            --accent: #ea580c;
-            --accent-light: #fff7ed;
+            --bg-glow: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
+            --panel-bg: rgba(30, 41, 59, 0.4);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-glow: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
+            --accent-cyan: #06b6d4;
+            --accent-orange: #f97316;
+            --radius-lg: 24px;
+            --radius-md: 16px;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; background-color: var(--bg); color: var(--text-main); }
-        .container { max-width: 600px; margin: 10px auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
-        h1 { font-size: 22px; text-align: center; color: var(--text-main); margin-bottom: 6px; font-weight: 800; letter-spacing: -0.5px; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 24px 16px;
+            background: var(--bg-glow);
+            min-height: 100vh;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 40px auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 32px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 130, 246, 0.05);
+        }
+
+        /* 天才デザイナーによるタイポグラフィ */
+        h1 {
+            font-size: 26px;
+            text-align: center;
+            margin: 0 0 8px 0;
+            font-weight: 900;
+            letter-spacing: -0.025em;
+            background: var(--accent-glow);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
         
-        /* 注意書きのスタイル */
-        .notice-text { text-align: center; font-size: 13px; color: #ef4444; font-weight: 600; margin-bottom: 20px; }
+        .notice-text {
+            text-align: center;
+            font-size: 13px;
+            color: #f43f5e;
+            font-weight: 500;
+            margin-bottom: 32px;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 12px rgba(244, 63, 94, 0.3);
+        }
         
-        .search-wrapper { position: relative; }
-        .search-box { width: 100%; padding: 16px 24px; font-size: 16px; border: 2px solid #e2e8f0; border-radius: 50px; box-sizing: border-box; outline: none; transition: all 0.25s ease; background: #f1f5f9; }
-        .search-box:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
-        .status { font-size: 13px; color: var(--text-sub); margin: 15px 0 10px 12px; font-weight: 600; }
+        .search-wrapper {
+            position: relative;
+        }
+
+        /* サイバー感あふれる極上入力フォーム */
+        .search-box {
+            width: 100%;
+            padding: 18px 28px;
+            font-size: 16px;
+            color: var(--text-primary);
+            border: 1px solid var(--panel-border);
+            border-radius: 50px;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(15, 23, 42, 0.6);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .search-box:focus {
+            border-color: #8b5cf6;
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+        .search-box::placeholder {
+            color: #475569;
+        }
+
+        /* 流れるようなステータス表示 */
+        .status {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 16px 0 16px 16px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
         
-        /* もしかしてエリア */
-        .suggestion-area { display: none; background: var(--accent-light); border: 1px dashed var(--accent); padding: 12px 16px; border-radius: 14px; margin-bottom: 15px; text-align: center; }
-        .suggestion-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; font-size: 14px; font-weight: 700; border-radius: 30px; cursor: pointer; margin-top: 8px; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.2); transition: transform 0.1s; }
-        .suggestion-btn:active { transform: scale(0.96); }
+        /* 次世代UIインラインコントロール */
+        .btn-container {
+            display: none;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            animation: fadeIn 0.3s ease;
+        }
+        .action-btn {
+            border: none;
+            background: none;
+            padding: 0 4px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            position: relative;
+            transition: color 0.2s;
+            margin-left: 4px;
+        }
+        .action-btn::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            transform: scaleX(0);
+            height: 1px;
+            bottom: -1px;
+            left: 0;
+            background-color: var(--accent-cyan);
+            transform-origin: bottom right;
+            transition: transform 0.25s ease-out;
+        }
+        .action-btn:hover {
+            color: #22d3ee;
+        }
+        .action-btn:hover::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
         
-        .results-list { max-height: 60vh; overflow-y: auto; border-radius: 16px; }
-        .result-item { padding: 16px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; transition: background 0.2s; }
-        .result-item:last-child { border-bottom: none; }
-        .result-item:hover { background-color: var(--primary-light); }
+        /* リストアイテムの極上デザイン */
+        .results-list {
+            max-height: 55vh;
+            overflow-y: auto;
+            border-radius: var(--radius-md);
+            padding-right: 4px;
+        }
+        /* スクロールバーのカスタマイズ */
+        .results-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .results-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .results-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .results-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .result-item {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.01);
+            margin-bottom: 4px;
+            border-radius: 12px;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
         
-        .song-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-        .song-title { font-weight: 700; color: var(--text-main); font-size: 16px; line-height: 1.4; word-break: break-all; }
-        .song-id { font-size: 12px; font-weight: 700; background: #e2e8f0; padding: 3px 8px; border-radius: 6px; color: var(--text-sub); white-space: nowrap; }
-        .song-artist { color: var(--primary); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
-        .no-result { padding: 40px 20px; color: #94a3b8; text-align: center; font-size: 15px; }
+        .song-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .song-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 16px;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+        .song-id {
+            font-size: 11px;
+            font-weight: 800;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 10px;
+            border-radius: 30px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            letter-spacing: 0.05em;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .song-artist {
+            color: #a78bfa;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .no-result {
+            padding: 48px 20px;
+            color: #475569;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🎤 歌うま2026summer楽曲リスト検索</h1>
-    <!-- 注意書きテキスト -->
-    <div class="notice-text">⚠️ 提出の際は元のリストも必ずご確認ください</div>
+    <h1>歌うま2026summer楽曲リスト検索</h1>
+    <div class="notice-text">提出の際は元のリストも必ずご確認ください</div>
     
     <div class="search-wrapper">
-        <input type="text" id="searchInput" class="search-box" placeholder="曲名 や 歌手名 で検索...">
-        <div id="status" class="status">データ読込中...</div>
+        <input type="text" id="searchInput" class="search-box" placeholder="曲名 や 歌手名 で瞬時に検索...">
+        <div id="status" class="status">システム初期化中...</div>
         
-        <!-- もしかしてボタンを表示するエリア -->
-        <div id="suggestionArea" class="suggestion-area">
-            <div style="color: var(--accent); font-size: 14px; font-weight: 600;">🔍 漢字やひらがな・カタカナの違いもまとめて探しますか？</div>
-            <button id="suggestionBtn" class="suggestion-btn">🤔 もしかして検索（拡張検索）を実行</button>
+        <!-- ① もしかしてボタンを表示するエリア -->
+        <div id="suggestionArea" class="btn-container">
+            💡 お探しの曲が見つからない？ <button id="suggestionBtn" class="action-btn">ひらがな・カタカナもまとめて再検索</button>
+        </div>
+        
+        <!-- ② 拡張検索を解除するエリア -->
+        <div id="clearArea" class="btn-container" style="border-color: rgba(249, 115, 22, 0.2);">
+            ✨ 表記の揺れを含めた拡張検索モード <button id="clearBtn" class="action-btn" style="color: var(--accent-orange);">通常の検索に戻す</button>
         </div>
         
         <div id="results" class="results-list"></div>
@@ -14732,9 +14925,9 @@ Ever Getting Back Together (Japanese Ver.)"
     function normalizeText(text) {
         return text
             .toLowerCase()
-            .replace(/[\u30a1-\u30f6]/g, match => String.fromCharCode(match.charCodeAt(0) - 0x60)) // カタカナをひらがなに
-            .replace(/[\uFF01-\uFF5E]/g, match => String.fromCharCode(match.charCodeAt(0) - 0xEE00)) // 全角英数を半角に
-            .replace(/\s+/g, ''); // スペース消去
+            .replace(/[\u30a1-\u30f6]/g, match => String.fromCharCode(match.charCodeAt(0) - 0x60))
+            .replace(/[\uFF01-\uFF5E]/g, match => String.fromCharCode(match.charCodeAt(0) - 0xEE00))
+            .replace(/\s+/g, '');
     }
 
     const rawText = document.getElementById('rawData').textContent;
@@ -14759,57 +14952,25 @@ Ever Getting Back Together (Japanese Ver.)"
     const statusEl = document.getElementById('status');
     const suggestionArea = document.getElementById('suggestionArea');
     const suggestionBtn = document.getElementById('suggestionBtn');
+    const clearArea = document.getElementById('clearArea');
+    const clearBtn = document.getElementById('clearBtn');
     const resultsEl = document.getElementById('results');
 
-    statusEl.textContent = `準備完了！全 ${songs.length.toLocaleString()} 件から検索できます`;
+    statusEl.innerHTML = `READY // オンラインデータベースに接続（全 ${songs.length.toLocaleString()} 件）`;
 
-    function renderResults(filtered, isExtended = false) {
-        resultsEl.innerHTML = '';
-        statusEl.textContent = `検索結果: ${filtered.length.toLocaleString()} 件ヒット`;
-        if (isExtended) {
-            statusEl.textContent += `（※拡張検索モード実行中）`;
-        }
-
-        if (filtered.length === 0) {
-            resultsEl.innerHTML = '<div class="no-result">該当する楽曲が見つかりませんでした</div>';
-            return;
-        }
-
-        const fragment = document.createDocumentFragment();
-        const displayLimit = filtered.slice(0, 200);
-        
-        if (filtered.length > 200) {
-            statusEl.textContent += ` (上位200件を表示中。文字を追加して絞り込んでください)`;
-        }
-
-        displayLimit.forEach(song => {
-            const div = document.createElement('div');
-            div.className = 'result-item';
-            div.innerHTML = `
-                <div class="song-row">
-                    <div class="song-title">${song.title}</div>
-                    <div class="song-id">No. ${song.id}</div>
-                </div>
-                <div class="song-artist">🎤 ${song.artist}</div>
-            `;
-            fragment.appendChild(div);
-        });
-        resultsEl.appendChild(fragment);
-    }
-
-    // 通常検索（入力されたらボタンを常に表示）
-    searchInput.addEventListener('input', () => {
+    function runNormalSearch() {
         const query = searchInput.value.trim();
         
         if (!query) {
             suggestionArea.style.display = 'none';
+            clearArea.style.display = 'none';
             resultsEl.innerHTML = '';
-            statusEl.textContent = `全 ${songs.length.toLocaleString()} 件から検索できます`;
+            statusEl.innerHTML = `READY // 全 ${songs.length.toLocaleString()} 件が検索可能`;
             return;
         }
 
-        // 文字が入力されていれば「もしかしてボタン」を常に表示する
         suggestionArea.style.display = 'block';
+        clearArea.style.display = 'none';
 
         const lowerQuery = query.toLowerCase();
         const filtered = songs.filter(song => 
@@ -14818,9 +14979,46 @@ Ever Getting Back Together (Japanese Ver.)"
         );
 
         renderResults(filtered, false);
-    });
+    }
 
-    // もしかしてボタン（拡張検索）
+    function renderResults(filtered, isExtended = false) {
+        resultsEl.innerHTML = '';
+        
+        let statusText = `HIT // ${filtered.length.toLocaleString()} 件の楽曲を検出`;
+        if (isExtended) {
+            statusText = `EXTENDED MATCH // 表記揺れを含む ${filtered.length.toLocaleString()} 件を検出`;
+        }
+        statusEl.innerHTML = statusText;
+
+        if (filtered.length === 0) {
+            resultsEl.innerHTML = '<div class="no-result">NO DATA // 条件に一致する楽曲が存在しません</div>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        const displayLimit = filtered.slice(0, 200);
+        
+        if (filtered.length > 200) {
+            statusEl.innerHTML += ` <span style="color:var(--accent-cyan); font-size:11px; margin-left:8px;">(上位200件を出力中... 文字を追加して絞り込んでください)</span>`;
+        }
+
+        displayLimit.forEach(song => {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.innerHTML = `
+                <div class="song-row">
+                    <div class="song-title">${song.title}</div>
+                    <div class="song-id">ID: ${song.id}</div>
+                </div>
+                <div class="song-artist">⚡️ ${song.artist}</div>
+            `;
+            fragment.appendChild(div);
+        });
+        resultsEl.appendChild(fragment);
+    }
+
+    searchInput.addEventListener('input', runNormalSearch);
+
     suggestionBtn.addEventListener('click', () => {
         const query = searchInput.value.trim();
         if (!query) return;
@@ -14833,9 +15031,11 @@ Ever Getting Back Together (Japanese Ver.)"
 
         renderResults(extendedFiltered, true);
         
-        // 拡張検索を実行したらボタンエリアは閉じる
         suggestionArea.style.display = 'none';
+        clearArea.style.display = 'block';
     });
+
+    clearBtn.addEventListener('click', runNormalSearch);
 </script>
 
 </body>
