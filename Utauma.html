@@ -66,7 +66,6 @@
             position: relative;
         }
 
-        /* ✨ 何もない時もさりげなく煌めく検索ボックス */
         .search-box {
             width: 100%;
             padding: 18px 28px;
@@ -78,13 +77,10 @@
             outline: none;
             background: rgba(15, 23, 42, 0.6);
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-            
-            /* アニメーションの設定 */
             animation: ambientGlow 4s ease-in-out infinite;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 呼吸するような優美な明滅（常時） */
         @keyframes ambientGlow {
             0%, 100% {
                 border-color: rgba(255, 255, 255, 0.08);
@@ -96,7 +92,6 @@
             }
         }
 
-        /* フォーカス時はアニメーションを止めて強烈に発光 */
         .search-box:focus {
             animation: none;
             border-color: #8b5cf6;
@@ -184,10 +179,11 @@
         .action-btn:hover::after { transform: scaleX(1); transform-origin: bottom left; }
         
         .results-list {
-            max-height: 50vh;
+            max-height: 40vh;
             overflow-y: auto;
             border-radius: var(--radius-md);
             padding-right: 4px;
+            margin-bottom: 24px;
         }
         .results-list::-webkit-scrollbar { width: 6px; }
         .results-list::-webkit-scrollbar-track { background: transparent; }
@@ -253,6 +249,73 @@
             font-weight: 500;
         }
 
+        /* 🌐 完全身内完結型・インラインアシストセクション */
+        .external-assist-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+        .assist-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            letter-spacing: 0.02em;
+        }
+        .assist-input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            box-sizing: border-box;
+            outline: none;
+            background: rgba(15, 23, 42, 0.4);
+            transition: all 0.3s;
+        }
+        .assist-input:focus {
+            border-color: rgba(6, 182, 212, 0.4);
+            background: rgba(15, 23, 42, 0.6);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.1);
+        }
+        
+        /* 予測サジェスト候補の並び */
+        .assist-results {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .assist-chip {
+            background: rgba(6, 182, 212, 0.06);
+            border: 1px solid rgba(6, 182, 212, 0.15);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            animation: fadeIn 0.2s ease;
+        }
+        .assist-chip:hover {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: var(--accent-cyan);
+            transform: translateX(2px);
+        }
+        .assist-chip .chip-title {
+            font-weight: 700;
+            color: #22d3ee;
+        }
+        .assist-chip .chip-artist {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-4px); }
             to { opacity: 1; transform: translateY(0); }
@@ -285,6 +348,13 @@
         </div>
         
         <div id="results" class="results-list"></div>
+    </div>
+
+    <!-- 🌐 完全身内完結型・アシストセクション -->
+    <div class="external-assist-section">
+        <div class="assist-title">🔍 曲名や歌手名がうろ覚え・わからない場合</div>
+        <input type="text" id="assistInput" class="assist-input" placeholder="ひらがな、カタカナ、一部のキーワードなど手がかりを入力...">
+        <div id="assistResults" class="assist-results"></div>
     </div>
 </div>
 
@@ -14990,6 +15060,10 @@ Ever Getting Back Together (Japanese Ver.)"
     const resultsEl = document.getElementById('results');
     const filterTabs = document.querySelectorAll('.filter-tab');
 
+    // アシスト機能の要素
+    const assistInput = document.getElementById('assistInput');
+    const assistResultsEl = document.getElementById('assistResults');
+
     statusEl.innerHTML = `READY // オンラインデータベースに接続（全 ${songs.length.toLocaleString()} 件）`;
 
     function executeSearch() {
@@ -15058,12 +15132,53 @@ Ever Getting Back Together (Japanese Ver.)"
                     <div class="song-title">${song.title}</div>
                     <div class="song-id">ID: ${song.id}</div>
                 </div>
-                <div class="song-artist">🎙 ${song.artist}</div>
+                <div class="song-artist">⚡️ ${song.artist}</div>
             `;
             fragment.appendChild(div);
         });
         resultsEl.appendChild(fragment);
     }
+
+    // ✨ インラインアシストサジェストエンジン処理
+    assistInput.addEventListener('input', () => {
+        const val = assistInput.value.trim();
+        assistResultsEl.innerHTML = '';
+        
+        if (!val || val.length < 2) return; // 2文字以上入力で発動
+
+        const normalizedQuery = normalizeText(val);
+        
+        // 14000件の中から「表記揺れも含めて」部分一致する候補を最大8件抽出
+        const matchedSuggestions = songs.filter(song => 
+            song.normalizedTitle.includes(normalizedQuery) || 
+            song.normalizedArtist.includes(normalizedQuery)
+        ).slice(0, 8);
+
+        matchedSuggestions.forEach(song => {
+            const div = document.createElement('div');
+            div.className = 'assist-chip';
+            div.innerHTML = `
+                <span class="chip-title">🎵 ${song.title}</span>
+                <span class="chip-artist">🎤 ${song.artist}</span>
+            `;
+            
+            // タップしたら上のメイン検索窓にブチ込んで即時検索
+            div.addEventListener('click', () => {
+                searchInput.value = song.title; // 曲名をコピー
+                isExtendedMode = false;
+                executeSearch();
+                
+                // 上の検索窓までスムーズスクロール
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // アシスト側はクリア
+                assistInput.value = '';
+                assistResultsEl.innerHTML = '';
+            });
+            
+            assistResultsEl.appendChild(div);
+        });
+    });
 
     searchInput.addEventListener('input', () => {
         isExtendedMode = false;
