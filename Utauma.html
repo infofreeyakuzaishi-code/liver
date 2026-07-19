@@ -3,17 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>楽曲リスト検索システム</title>
+    <title>楽曲リスト 高速検索システム</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f8fafc; color: #1e293b; }
-        .container { max-width: 600px; margin: 20px auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        h1 { font-size: 20px; text-align: center; color: #0f172a; margin-bottom: 20px; font-weight: 700; }
-        .search-box { width: 100%; padding: 14px 20px; font-size: 16px; border: 2px solid #cbd5e1; border-radius: 30px; box-sizing: border-box; outline: none; transition: 0.2s; }
-        .search-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-        .status { font-size: 13px; color: #64748b; margin: 15px 0 10px 10px; font-weight: 600; }
-        .results-list { max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
-        .result-item { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: 15px; line-height: 1.5; }
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --bg: #f8fafc;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; background-color: var(--bg); color: var(--text-main); }
+        .container { max-width: 600px; margin: 10px auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        h1 { font-size: 22px; text-align: center; color: var(--text-main); margin-bottom: 20px; font-weight: 800; letter-spacing: -0.5px; }
+        .search-wrapper { position: relative; }
+        .search-box { width: 100%; padding: 16px 24px; font-size: 16px; border: 2px solid #e2e8f0; border-radius: 50px; box-sizing: border-box; outline: none; transition: all 0.25s ease; background: #f1f5f9; }
+        .search-box:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
+        .status { font-size: 13px; color: var(--text-sub); margin: 15px 0 10px 12px; font-weight: 600; }
+        .results-list { max-height: 60vh; overflow-y: auto; border-radius: 16px; }
+        
+        /* 検索結果カードのデザイン */
+        .result-item { padding: 16px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; transition: background 0.2s; }
         .result-item:last-child { border-bottom: none; }
+        .result-item:hover { background-color: var(--primary-light); }
+        
+        .song-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        .song-title { font-weight: 700; color: var(--text-main); font-size: 16px; line-height: 1.4; word-break: break-all; }
+        .song-id { font-size: 12px; font-weight: 700; background: #e2e8f0; padding: 3px 8px; border-radius: 6px; color: var(--text-sub); white-space: nowrap; }
+        .song-artist { color: var(--primary); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        
+        .no-result { padding: 40px 20px; color: #94a3b8; text-align: center; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -21,9 +39,9 @@
 <div class="container">
     <h1>🎵 楽曲リスト 高速検索</h1>
     
-    <div>
-        <input type="text" id="searchInput" class="search-box" placeholder="歌手名や曲名を入力...">
-        <div id="status" class="status"></div>
+    <div class="search-wrapper">
+        <input type="text" id="searchInput" class="search-box" placeholder="曲名 や 歌手名 で検索...">
+        <div id="status" class="status">データ読込中...</div>
         <div id="results" class="results-list"></div>
     </div>
 </div>
@@ -14692,13 +14710,25 @@ Ever Getting Back Together (Japanese Ver.)"
 ="ゴダイゴ"	=""	="THE GALAXY EXPRESS 999[銀河鉄道999]"
 ="三代⽬ J Soul Brothers from EXILE TRIBE"	=""	="銀河鉄道999"
 </script>
-
 <script>
-    // 貼り付けられたテキストを行ごとに分解してリスト化
     const rawText = document.getElementById('rawData').textContent;
+    
+    // Excelデータを解析して、綺麗にオブジェクト化する処理
     const songs = rawText.split('\n')
-                         .map(line => line.trim())
-                         .filter(line => line.length > 0 && !line.startsWith('歌手名')); // ヘッダー行を除外
+        .map(line => line.trim())
+        .filter(line => line.length > 0 && !line.includes('歌手名'))
+        .map(line => {
+            // Excelの不要な「="」や「"」を綺麗にお掃除
+            const cleanLine = line.replace(/="/g, '').replace(/"/g, '');
+            // タブ区切り、または多重スペースで綺麗に3つの要素に分解
+            const parts = cleanLine.split(/\t| {2,}/).map(p => p.trim());
+            
+            return {
+                artist: parts[0] || '不明',
+                id: parts[1] || '---',
+                title: parts[2] || '無題'
+            };
+        });
 
     const searchInput = document.getElementById('searchInput');
     const statusEl = document.getElementById('status');
@@ -14706,7 +14736,6 @@ Ever Getting Back Together (Japanese Ver.)"
 
     statusEl.textContent = `準備完了！全 ${songs.length.toLocaleString()} 件から検索できます`;
 
-    // 検索処理
     searchInput.addEventListener('input', () => {
         const query = searchInput.value.trim().toLowerCase();
         resultsEl.innerHTML = '';
@@ -14716,30 +14745,38 @@ Ever Getting Back Together (Japanese Ver.)"
             return;
         }
 
-        // 部分一致検索
-        const filtered = songs.filter(line => line.toLowerCase().includes(query));
+        // 歌手名と曲名のどちらかにヒットするか検索
+        const filtered = songs.filter(song => 
+            song.artist.toLowerCase().includes(query) || 
+            song.title.toLowerCase().includes(query)
+        );
+
         statusEl.textContent = `検索結果: ${filtered.length.toLocaleString()} 件ヒット`;
 
         if (filtered.length === 0) {
-            resultsEl.innerHTML = '<div style="padding: 30px; color: #94a3b8; text-align: center;">見つかりませんでした</div>';
+            resultsEl.innerHTML = '<div class="no-result">該当する楽曲が見つかりませんでした</div>';
             return;
         }
 
         const fragment = document.createDocumentFragment();
-        
-        // 件数が多すぎる場合は上位200件のみ表示
         const displayLimit = filtered.slice(0, 200);
+        
         if (filtered.length > 200) {
             statusEl.textContent += ` (上位200件を表示中。文字を追加して絞り込んでください)`;
         }
 
-        displayLimit.forEach(line => {
+        displayLimit.forEach(song => {
             const div = document.createElement('div');
             div.className = 'result-item';
             
-            // Excelのタブ区切り（またはスペース区切り）を見やすく整形
-            const formattedLine = line.replace(/\t/g, ' | ').replace(/="([^"]+)"/g, '$1'); 
-            div.innerHTML = formattedLine;
+            // カラオケマシンのように「曲名」を主役に、右側に「番号」、下に「歌手名」を配置
+            div.innerHTML = `
+                <div class="song-row">
+                    <div class="song-title">${song.title}</div>
+                    <div class="song-id">No. ${song.id}</div>
+                </div>
+                <div class="song-artist">🎤 ${song.artist}</div>
+            `;
             
             fragment.appendChild(div);
         });
