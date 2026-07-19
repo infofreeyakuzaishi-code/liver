@@ -179,7 +179,7 @@
         .action-btn:hover::after { transform: scaleX(1); transform-origin: bottom left; }
         
         .results-list {
-            max-height: 40vh;
+            max-height: 50vh;
             overflow-y: auto;
             border-radius: var(--radius-md);
             padding-right: 4px;
@@ -242,78 +242,114 @@
             gap: 6px;
         }
         .no-result {
-            padding: 48px 20px;
-            color: #475569;
+            padding: 32px 20px;
+            color: #64748b;
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 500;
         }
 
-        /* 🌐 完全身内完結型・インラインアシストセクション */
-        .external-assist-section {
-            margin-top: 32px;
-            padding-top: 24px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        /* 🔍 外部検索へ導くブロック（うろ覚え救済用） */
+        .assist-trigger-box {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(6, 182, 212, 0.06);
+            border: 1px dashed rgba(6, 182, 212, 0.3);
+            border-radius: var(--radius-md);
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.3s ease;
         }
-        .assist-title {
+        .assist-text {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+        .web-search-btn {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
             font-size: 13px;
             font-weight: 700;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            letter-spacing: 0.02em;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+            transition: all 0.2s;
         }
-        .assist-input {
-            width: 100%;
-            padding: 12px 20px;
-            font-size: 14px;
-            color: var(--text-primary);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            box-sizing: border-box;
-            outline: none;
-            background: rgba(15, 23, 42, 0.4);
-            transition: all 0.3s;
+        .web-search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(6, 182, 212, 0.3);
         }
-        .assist-input:focus {
-            border-color: rgba(6, 182, 212, 0.4);
-            background: rgba(15, 23, 42, 0.6);
-            box-shadow: 0 0 12px rgba(6, 182, 212, 0.1);
-        }
-        
-        /* 予測サジェスト候補の並び */
-        .assist-results {
-            margin-top: 12px;
+
+        /* 🤍 3秒間の「戻ってきてね」白背景案内画面（初期状態は非表示） */
+        #redirectOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff; /* 完全な白背景 */
+            color: #1e293b; /* 文字は暗めの色で見やすく */
+            z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            max-height: 180px;
-            overflow-y: auto;
-        }
-        .assist-chip {
-            background: rgba(6, 182, 212, 0.06);
-            border: 1px solid rgba(6, 182, 212, 0.15);
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            transition: all 0.2s;
-            animation: fadeIn 0.2s ease;
+            padding: 32px;
+            box-sizing: border-box;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
-        .assist-chip:hover {
-            background: rgba(6, 182, 212, 0.15);
-            border-color: var(--accent-cyan);
-            transform: translateX(2px);
+        #redirectOverlay.active {
+            opacity: 1;
+            pointer-events: auto;
         }
-        .assist-chip .chip-title {
-            font-weight: 700;
-            color: #22d3ee;
+        .overlay-card {
+            max-width: 480px;
+            text-align: center;
         }
-        .assist-chip .chip-artist {
-            font-size: 11px;
-            color: var(--text-secondary);
+        .overlay-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .overlay-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .overlay-instruction {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .overlay-instruction b {
+            color: #ef4444;
+        }
+        
+        /* ⏳ プログレスバーのスタイル */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            border-radius: 4px;
+            transition: width 3s linear; /* 3秒かけて等速で満タンにする */
         }
 
         @keyframes fadeIn {
@@ -348,13 +384,29 @@
         </div>
         
         <div id="results" class="results-list"></div>
-    </div>
 
-    <!-- 🌐 完全身内完結型・アシストセクション -->
-    <div class="external-assist-section">
-        <div class="assist-title">🔍 曲名や歌手名がうろ覚え・わからない場合</div>
-        <input type="text" id="assistInput" class="assist-input" placeholder="ひらがな、カタカナ、一部のキーワードなど手がかりを入力...">
-        <div id="assistResults" class="assist-results"></div>
+        <!-- 🔍 外部Web検索への動線ブロック -->
+        <div id="assistTriggerBox" class="assist-trigger-box">
+            <div class="assist-text">漢字の間違いや、うろ覚えの可能性があります。</div>
+            <button id="webSearchBtn" class="web-search-btn">🌐 外部ブラウザで正しい表記を検索する</button>
+        </div>
+    </div>
+</div>
+
+<!-- 🤍 3秒間の「戻ってきてね」案内用オーバレイ画面 -->
+<div id="redirectOverlay">
+    <div class="overlay-card">
+        <div class="overlay-icon">🔍</div>
+        <div class="overlay-title">外部ブラウザを開いて<br>正しい曲名・歌手名を探します</div>
+        <div class="overlay-instruction">
+            コピー用あるいは確認用に、別のタブでGoogle検索を開きます。<br><br>
+            <b>【重要】</b> 正しい文字が見つかったら、画面の<b>「左上の矢印（←）」</b>または<b>「元の検索窓のタブ」</b>を押して、必ずこの画面に戻ってきてください。
+        </div>
+        
+        <!-- ⏳ 満タンになるプログレスバー -->
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
     </div>
 </div>
 
@@ -15059,10 +15111,12 @@ Ever Getting Back Together (Japanese Ver.)"
     const clearBtn = document.getElementById('clearBtn');
     const resultsEl = document.getElementById('results');
     const filterTabs = document.querySelectorAll('.filter-tab');
+    const assistTriggerBox = document.getElementById('assistTriggerBox');
+    const webSearchBtn = document.getElementById('webSearchBtn');
 
-    // アシスト機能の要素
-    const assistInput = document.getElementById('assistInput');
-    const assistResultsEl = document.getElementById('assistResults');
+    // 案内画面の要素
+    const redirectOverlay = document.getElementById('redirectOverlay');
+    const progressBar = document.getElementById('progressBar');
 
     statusEl.innerHTML = `READY // オンラインデータベースに接続（全 ${songs.length.toLocaleString()} 件）`;
 
@@ -15072,6 +15126,7 @@ Ever Getting Back Together (Japanese Ver.)"
         if (!query) {
             suggestionArea.style.display = 'none';
             clearArea.style.display = 'none';
+            assistTriggerBox.style.display = 'none';
             resultsEl.innerHTML = '';
             statusEl.innerHTML = `READY // 全 ${songs.length.toLocaleString()} 件が検索可能`;
             return;
@@ -15114,8 +15169,11 @@ Ever Getting Back Together (Japanese Ver.)"
 
         if (filtered.length === 0) {
             resultsEl.innerHTML = '<div class="no-result">NO DATA // 条件に一致する楽曲が存在しません</div>';
+            assistTriggerBox.style.display = 'block'; // 🔍 1件も出ない時だけ外部検索ボタンを出す
             return;
         }
+
+        assistTriggerBox.style.display = 'none'; // 繋がれば非表示
 
         const fragment = document.createDocumentFragment();
         const displayLimit = filtered.slice(0, 200);
@@ -15132,52 +15190,35 @@ Ever Getting Back Together (Japanese Ver.)"
                     <div class="song-title">${song.title}</div>
                     <div class="song-id">ID: ${song.id}</div>
                 </div>
-                <div class="song-artist">⚡️ ${song.artist}</div>
+                <div class="song-artist">🎙 ${song.artist}</div>
             `;
             fragment.appendChild(div);
         });
         resultsEl.appendChild(fragment);
     }
 
-    // ✨ インラインアシストサジェストエンジン処理
-    assistInput.addEventListener('input', () => {
-        const val = assistInput.value.trim();
-        assistResultsEl.innerHTML = '';
-        
-        if (!val || val.length < 2) return; // 2文字以上入力で発動
+    // ⏳ 3秒間のアニメーション案内を経て外部ブラウザへ飛ばす処理
+    webSearchBtn.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (!query) return;
 
-        const normalizedQuery = normalizeText(val);
+        // 1. 白背景の案内オーバレイを表示
+        redirectOverlay.classList.add('active');
         
-        // 14000件の中から「表記揺れも含めて」部分一致する候補を最大8件抽出
-        const matchedSuggestions = songs.filter(song => 
-            song.normalizedTitle.includes(normalizedQuery) || 
-            song.normalizedArtist.includes(normalizedQuery)
-        ).slice(0, 8);
+        // 2. プログレスバーを100%に伸ばす（CSSで3秒かけて動く設定）
+        setTimeout(() => {
+            progressBar.style.width = '100%';
+        }, 50); // 描画タイミングの微調整用
 
-        matchedSuggestions.forEach(song => {
-            const div = document.createElement('div');
-            div.className = 'assist-chip';
-            div.innerHTML = `
-                <span class="chip-title">🎵 ${song.title}</span>
-                <span class="chip-artist">🎤 ${song.artist}</span>
-            `;
+        // 3. 3秒（3000ms）経過したら、別タブでGoogle検索を開き、案内を閉じる
+        setTimeout(() => {
+            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            window.open(searchUrl, '_blank');
             
-            // タップしたら上のメイン検索窓にブチ込んで即時検索
-            div.addEventListener('click', () => {
-                searchInput.value = song.title; // 曲名をコピー
-                isExtendedMode = false;
-                executeSearch();
-                
-                // 上の検索窓までスムーズスクロール
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-                // アシスト側はクリア
-                assistInput.value = '';
-                assistResultsEl.innerHTML = '';
-            });
-            
-            assistResultsEl.appendChild(div);
-        });
+            // 外部タブが開いた後、元の画面に戻ってきた時のためにリセットしておく
+            redirectOverlay.classList.remove('active');
+            progressBar.style.width = '0%';
+        }, 3050);
     });
 
     searchInput.addEventListener('input', () => {
