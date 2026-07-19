@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>楽曲リスト 高速検索システム</title>
+    <title>歌うま2026summer楽曲リスト検索</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -11,17 +11,27 @@
             --text-main: #0f172a;
             --text-sub: #475569;
             --bg: #f8fafc;
+            --accent: #ea580c;
+            --accent-light: #fff7ed;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; background-color: var(--bg); color: var(--text-main); }
         .container { max-width: 600px; margin: 10px auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
-        h1 { font-size: 22px; text-align: center; color: var(--text-main); margin-bottom: 20px; font-weight: 800; letter-spacing: -0.5px; }
+        h1 { font-size: 22px; text-align: center; color: var(--text-main); margin-bottom: 6px; font-weight: 800; letter-spacing: -0.5px; }
+        
+        /* 注意書きのスタイル */
+        .notice-text { text-align: center; font-size: 13px; color: #ef4444; font-weight: 600; margin-bottom: 20px; }
+        
         .search-wrapper { position: relative; }
         .search-box { width: 100%; padding: 16px 24px; font-size: 16px; border: 2px solid #e2e8f0; border-radius: 50px; box-sizing: border-box; outline: none; transition: all 0.25s ease; background: #f1f5f9; }
         .search-box:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
         .status { font-size: 13px; color: var(--text-sub); margin: 15px 0 10px 12px; font-weight: 600; }
-        .results-list { max-height: 60vh; overflow-y: auto; border-radius: 16px; }
         
-        /* 検索結果カードのデザイン */
+        /* もしかしてエリア */
+        .suggestion-area { display: none; background: var(--accent-light); border: 1px dashed var(--accent); padding: 12px 16px; border-radius: 14px; margin-bottom: 15px; text-align: center; }
+        .suggestion-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; font-size: 14px; font-weight: 700; border-radius: 30px; cursor: pointer; margin-top: 8px; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.2); transition: transform 0.1s; }
+        .suggestion-btn:active { transform: scale(0.96); }
+        
+        .results-list { max-height: 60vh; overflow-y: auto; border-radius: 16px; }
         .result-item { padding: 16px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; transition: background 0.2s; }
         .result-item:last-child { border-bottom: none; }
         .result-item:hover { background-color: var(--primary-light); }
@@ -30,18 +40,26 @@
         .song-title { font-weight: 700; color: var(--text-main); font-size: 16px; line-height: 1.4; word-break: break-all; }
         .song-id { font-size: 12px; font-weight: 700; background: #e2e8f0; padding: 3px 8px; border-radius: 6px; color: var(--text-sub); white-space: nowrap; }
         .song-artist { color: var(--primary); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
-        
         .no-result { padding: 40px 20px; color: #94a3b8; text-align: center; font-size: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🎵 楽曲リスト 高速検索</h1>
+    <h1>🎤 歌うま2026summer楽曲リスト検索</h1>
+    <!-- 注意書きテキスト -->
+    <div class="notice-text">⚠️ 提出の際は元のリストも必ずご確認ください</div>
     
     <div class="search-wrapper">
         <input type="text" id="searchInput" class="search-box" placeholder="曲名 や 歌手名 で検索...">
         <div id="status" class="status">データ読込中...</div>
+        
+        <!-- もしかしてボタンを表示するエリア -->
+        <div id="suggestionArea" class="suggestion-area">
+            <div style="color: var(--accent); font-size: 14px; font-weight: 600;">🔍 漢字やひらがな・カタカナの違いもまとめて探しますか？</div>
+            <button id="suggestionBtn" class="suggestion-btn">🤔 もしかして検索（拡張検索）を実行</button>
+        </div>
+        
         <div id="results" class="results-list"></div>
     </div>
 </div>
@@ -14711,47 +14729,46 @@ Ever Getting Back Together (Japanese Ver.)"
 ="三代⽬ J Soul Brothers from EXILE TRIBE"	=""	="銀河鉄道999"
 </script>
 <script>
+    function normalizeText(text) {
+        return text
+            .toLowerCase()
+            .replace(/[\u30a1-\u30f6]/g, match => String.fromCharCode(match.charCodeAt(0) - 0x60)) // カタカナをひらがなに
+            .replace(/[\uFF01-\uFF5E]/g, match => String.fromCharCode(match.charCodeAt(0) - 0xEE00)) // 全角英数を半角に
+            .replace(/\s+/g, ''); // スペース消去
+    }
+
     const rawText = document.getElementById('rawData').textContent;
     
-    // Excelデータを解析して、綺麗にオブジェクト化する処理
     const songs = rawText.split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0 && !line.includes('歌手名'))
         .map(line => {
-            // Excelの不要な「="」や「"」を綺麗にお掃除
             const cleanLine = line.replace(/="/g, '').replace(/"/g, '');
-            // タブ区切り、または多重スペースで綺麗に3つの要素に分解
             const parts = cleanLine.split(/\t| {2,}/).map(p => p.trim());
             
             return {
                 artist: parts[0] || '不明',
                 id: parts[1] || '---',
-                title: parts[2] || '無題'
+                title: parts[2] || '無題',
+                normalizedArtist: normalizeText(parts[0] || ''),
+                normalizedTitle: normalizeText(parts[2] || '')
             };
         });
 
     const searchInput = document.getElementById('searchInput');
     const statusEl = document.getElementById('status');
+    const suggestionArea = document.getElementById('suggestionArea');
+    const suggestionBtn = document.getElementById('suggestionBtn');
     const resultsEl = document.getElementById('results');
 
     statusEl.textContent = `準備完了！全 ${songs.length.toLocaleString()} 件から検索できます`;
 
-    searchInput.addEventListener('input', () => {
-        const query = searchInput.value.trim().toLowerCase();
+    function renderResults(filtered, isExtended = false) {
         resultsEl.innerHTML = '';
-
-        if (!query) {
-            statusEl.textContent = `全 ${songs.length.toLocaleString()} 件から検索できます`;
-            return;
-        }
-
-        // 歌手名と曲名のどちらかにヒットするか検索
-        const filtered = songs.filter(song => 
-            song.artist.toLowerCase().includes(query) || 
-            song.title.toLowerCase().includes(query)
-        );
-
         statusEl.textContent = `検索結果: ${filtered.length.toLocaleString()} 件ヒット`;
+        if (isExtended) {
+            statusEl.textContent += `（※拡張検索モード実行中）`;
+        }
 
         if (filtered.length === 0) {
             resultsEl.innerHTML = '<div class="no-result">該当する楽曲が見つかりませんでした</div>';
@@ -14768,8 +14785,6 @@ Ever Getting Back Together (Japanese Ver.)"
         displayLimit.forEach(song => {
             const div = document.createElement('div');
             div.className = 'result-item';
-            
-            // カラオケマシンのように「曲名」を主役に、右側に「番号」、下に「歌手名」を配置
             div.innerHTML = `
                 <div class="song-row">
                     <div class="song-title">${song.title}</div>
@@ -14777,10 +14792,49 @@ Ever Getting Back Together (Japanese Ver.)"
                 </div>
                 <div class="song-artist">🎤 ${song.artist}</div>
             `;
-            
             fragment.appendChild(div);
         });
         resultsEl.appendChild(fragment);
+    }
+
+    // 通常検索（入力されたらボタンを常に表示）
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim();
+        
+        if (!query) {
+            suggestionArea.style.display = 'none';
+            resultsEl.innerHTML = '';
+            statusEl.textContent = `全 ${songs.length.toLocaleString()} 件から検索できます`;
+            return;
+        }
+
+        // 文字が入力されていれば「もしかしてボタン」を常に表示する
+        suggestionArea.style.display = 'block';
+
+        const lowerQuery = query.toLowerCase();
+        const filtered = songs.filter(song => 
+            song.artist.toLowerCase().includes(lowerQuery) || 
+            song.title.toLowerCase().includes(lowerQuery)
+        );
+
+        renderResults(filtered, false);
+    });
+
+    // もしかしてボタン（拡張検索）
+    suggestionBtn.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        const normalizedQuery = normalizeText(query);
+        const extendedFiltered = songs.filter(song => 
+            song.normalizedArtist.includes(normalizedQuery) || 
+            song.normalizedTitle.includes(normalizedQuery)
+        );
+
+        renderResults(extendedFiltered, true);
+        
+        // 拡張検索を実行したらボタンエリアは閉じる
+        suggestionArea.style.display = 'none';
     });
 </script>
 
