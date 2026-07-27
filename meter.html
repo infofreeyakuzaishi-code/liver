@@ -238,6 +238,70 @@
       font-size: 0.9rem;
       text-align: center;
     }
+
+    /* フッター・PRエリア */
+    .footer-area {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 2px dashed #f0f0f0;
+      text-align: center;
+    }
+
+    .author-credit {
+      font-size: 0.85rem;
+      color: #777;
+      margin-bottom: 12px;
+    }
+
+    .agency-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #7c4dff, #ff4081);
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 0.9rem;
+      padding: 10px 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(124, 77, 255, 0.2);
+      transition: transform 0.2s, opacity 0.2s;
+      margin-bottom: 20px;
+    }
+
+    .agency-btn:active {
+      transform: scale(0.96);
+    }
+
+    .video-section-title {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .video-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .video-card {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 アスペクト比 */
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .video-card iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -345,6 +409,26 @@
       <div class="item-count" id="count-custom">0 <span>個</span></div>
     </div>
   </div>
+
+  <!-- フッター・クレジット・事務所PRエリア -->
+  <div class="footer-area">
+    <div class="author-credit">作成: pococha配信事務所なかなか</div>
+    <a href="https://v0-landing-page-design-six-drab.vercel.app/" target="_blank" rel="noopener noreferrer" class="agency-btn">
+      🏠 事務所公式ホームページはこちら
+    </a>
+
+    <div class="video-section-title">🎬 ライバー紹介・おすすめ動画</div>
+    <div class="video-container">
+      <div class="video-card">
+        <iframe src="https://www.youtube.com/embed/wB40iEou6mI" title="ライバー紹介動画1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="video-card">
+        <iframe src="https://www.youtube.com/embed/1qX5vc1tAvo" title="ライバー紹介動画2" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <!-- 今後動画を追加する場合はここへ <div class="video-card"><iframe ...></iframe></div> を増やせます -->
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -375,7 +459,7 @@
     // k換算表記（例: 20k）
     const kVal = (neededMeterVal / 1000).toFixed(1).replace(/\.0$/, '');
 
-    // 画面表示更新（上段にカンマ区切り数値、下段にカッコ付きk表記のみ）
+    // 画面表示更新
     document.getElementById('neededMeter').textContent = formatNum(neededMeterVal);
     document.getElementById('neededMeterK').textContent = `（${kVal}k）`;
 
