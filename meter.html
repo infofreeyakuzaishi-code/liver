@@ -282,7 +282,7 @@
   <div class="result-card">
     <div class="result-title">③ 必要なメーター</div>
     <div class="result-value" id="neededMeter">0</div>
-    <div class="result-sub" id="neededMeterK">0 k</div>
+    <div class="result-sub" id="neededMeterK">（0k）</div>
 
     <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.3); margin: 12px 0;">
 
@@ -354,7 +354,7 @@
     let val = parseFloat(input.value);
     if (!isNaN(val)) {
       input.value = Math.floor(val * 1000);
-      calculate(); // 計算を再実行
+      calculate();
     }
   }
 
@@ -372,12 +372,12 @@
     let neededMeterVal = target - current;
     if (neededMeterVal < 0) neededMeterVal = 0;
 
-    // k換算表記
+    // k換算表記（例: 20k）
     const kVal = (neededMeterVal / 1000).toFixed(1).replace(/\.0$/, '');
 
-    // 画面表示更新
+    // 画面表示更新（上段にカンマ区切り数値、下段にカッコ付きk表記のみ）
     document.getElementById('neededMeter').textContent = formatNum(neededMeterVal);
-    document.getElementById('neededMeterK').textContent = `${formatNum(neededMeterVal)} （${kVal} k）`;
+    document.getElementById('neededMeterK').textContent = `（${kVal}k）`;
 
     // ④ 必要なコイン数（メーター ÷ 4）
     const neededCoinsVal = Math.ceil(neededMeterVal / 4);
