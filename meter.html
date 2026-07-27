@@ -1,258 +1,421 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポコチャ メーター＆アイテム計算機</title>
+  <style>
+    :root {
+      --primary-color: #ff4081;
+      --secondary-color: #ff80ab;
+      --bg-color: #fff5f8;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --accent-color: #7c4dff;
+    }
 
-<title>Pococha メーター計算</title>
+    * {
+      box-sizing: border-box;
+      font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+    }
 
-<style>
-body{
-    margin:0;
-    font-family:"Hiragino Sans","Yu Gothic",sans-serif;
-    background:#FFF7F2;
-    color:#333;
-}
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
 
-.container{
-    max-width:480px;
-    margin:auto;
-    padding:20px;
-}
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background-color: var(--card-bg);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(255, 64, 129, 0.15);
+    }
 
-h1{
-    text-align:center;
-    color:#ff6b81;
-    font-size:32px;
-}
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      font-size: 1.4rem;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
 
-.card{
-    background:white;
-    border-radius:18px;
-    padding:18px;
-    margin:15px 0;
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
-}
+    .ref-link {
+      display: block;
+      text-align: center;
+      background-color: #ffe0b2;
+      color: #e65100;
+      padding: 8px 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+      transition: transform 0.1s;
+    }
 
-label{
-    font-weight:bold;
-    display:block;
-    margin-bottom:8px;
-}
+    .ref-link:active {
+      transform: scale(0.98);
+    }
 
-input{
-    width:100%;
-    font-size:28px;
-    padding:12px;
-    border-radius:12px;
-    border:2px solid #ffd4dc;
-    box-sizing:border-box;
-}
+    .input-group {
+      margin-bottom: 16px;
+      background: #fef0f5;
+      padding: 12px;
+      border-radius: 16px;
+    }
 
-.result{
-    font-size:30px;
-    font-weight:bold;
-    color:#ff4f7a;
-    text-align:center;
-}
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: var(--primary-color);
+      font-size: 0.95rem;
+    }
 
-.small{
-    text-align:center;
-    margin-top:10px;
-}
+    .input-wrapper {
+      display: flex;
+      gap: 8px;
+    }
 
-.small a{
-    color:#3b82f6;
-    text-decoration:none;
-    font-size:15px;
-}
+    input[type="number"] {
+      flex: 1;
+      border: 2px solid var(--secondary-color);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      outline: none;
+      width: 100%;
+    }
 
-table{
-    width:100%;
-    border-collapse:collapse;
-}
+    input[type="number"]:focus {
+      border-color: var(--primary-color);
+    }
 
-th{
-    background:#ff9fb4;
-    color:white;
-    padding:10px;
-}
+    .btn-k {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0 16px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #512da8;
+    }
 
-td{
-    padding:12px;
-    border-bottom:1px solid #eee;
-    font-size:20px;
-}
+    .btn-k:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #512da8;
+    }
 
-tr:nth-child(even){
-    background:#fff8fb;
-}
+    /* 視覚的メーター表示 */
+    .meter-visual-zone {
+      margin: 20px 0;
+      background: #fff;
+      border: 2px dashed var(--secondary-color);
+      padding: 12px;
+      border-radius: 16px;
+    }
 
-.freeInput{
-    width:90px;
-    font-size:18px;
-}
+    .meter-bar-container {
+      background-color: #e0e0e0;
+      height: 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 8px;
+      position: relative;
+    }
 
-.footer{
-    text-align:center;
-    margin:30px;
-    color:#888;
-    font-size:13px;
-}
-</style>
+    .meter-bar-fill {
+      background: linear-gradient(90deg, #ff80ab, #ff4081);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
 
+    /* 計算結果カード */
+    .result-card {
+      background: linear-gradient(135deg, #ff4081, #7c4dff);
+      color: white;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .result-title {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .result-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin: 4px 0;
+    }
+
+    .result-sub {
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 8px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    /* アイテム一覧 */
+    .item-section-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .item-card {
+      background: #f9f9f9;
+      border: 2px solid #eee;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .item-name {
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+
+    .item-cost {
+      font-size: 0.75rem;
+      color: #777;
+      margin-bottom: 6px;
+    }
+
+    .item-count {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .item-count span {
+      font-size: 0.8rem;
+      color: #333;
+    }
+
+    /* 自由入力アイテムカード */
+    .custom-item-card {
+      grid-column: span 2;
+      background: #f0f4ff;
+      border: 2px solid #9fa8da;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .custom-input-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .custom-input-row input {
+      width: 100px;
+      padding: 4px 8px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
 <div class="container">
+  <h1>✨ メーター＆コイン計算機 ✨</h1>
 
-<h1>🎁 メーター計算 🎁</h1>
+  <!-- 外部参考リンク -->
+  <a href="https://one-carat.com/campus/archives/category/streamer-tips/pococha-rank-border" target="_blank" rel="noopener noreferrer" class="ref-link">
+    🔍 今日のボーダー（参考値）をチェック
+  </a>
 
-<div class="card">
+  <!-- 入力フォーム -->
+  <div class="input-group">
+    <label for="targetMeter">① 目標メーター</label>
+    <div class="input-wrapper">
+      <input type="number" id="targetMeter" placeholder="例: 100000" oninput="calculate()">
+      <button class="btn-k" onclick="addK('targetMeter')">k</button>
+    </div>
+  </div>
 
-<label>① 目標メーター</label>
-<input type="number" id="goal" oninput="calc()">
+  <div class="input-group">
+    <label for="currentMeter">② 今のメーター</label>
+    <div class="input-wrapper">
+      <input type="number" id="currentMeter" placeholder="例: 20000" oninput="calculate()">
+      <button class="btn-k" onclick="addK('currentMeter')">k</button>
+    </div>
+  </div>
 
-<div class="small">
-<a href="https://one-carat.com/campus/archives/category/streamer-tips/pococha-rank-border" target="_blank">
-📖 メーター参考表を見る
-</a>
-</div>
+  <!-- 視覚的メーター -->
+  <div class="meter-visual-zone">
+    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
+      <span>進捗率</span>
+      <span id="progressText">0%</span>
+    </div>
+    <div class="meter-bar-container">
+      <div class="meter-bar-fill" id="meterBar"></div>
+    </div>
+  </div>
 
-</div>
+  <!-- 計算結果表示 -->
+  <div class="result-card">
+    <div class="result-title">③ 必要なメーター</div>
+    <div class="result-value" id="neededMeter">0</div>
+    <div class="result-sub" id="neededMeterK">0 k</div>
 
-<div class="card">
+    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.3); margin: 12px 0;">
 
-<label>② 今のメーター</label>
-<input type="number" id="now" oninput="calc()">
+    <div class="result-title">④ 必要なコイン数（メーター÷4）</div>
+    <div class="result-value" id="neededCoins" style="color: #ffe082;">0</div>
+  </div>
 
-</div>
+  <!-- 必要なアイテム一覧 -->
+  <div class="item-section-title">🎁 あと必要なアイテム数</div>
+  <div class="item-grid">
+    <div class="item-card">
+      <div class="item-name">馬車</div>
+      <div class="item-cost">5,555 コイン</div>
+      <div class="item-count" id="count-5555">0 <span>個</span></div>
+    </div>
 
-<div class="card">
+    <div class="item-card">
+      <div class="item-name">花火</div>
+      <div class="item-cost">1,111 コイン</div>
+      <div class="item-count" id="count-1111">0 <span>個</span></div>
+    </div>
 
-<label>③ 必要メーター</label>
+    <div class="item-card">
+      <div class="item-name">トライバル</div>
+      <div class="item-cost">444 コイン</div>
+      <div class="item-count" id="count-444">0 <span>個</span></div>
+    </div>
 
-<div class="result" id="needMeter">0</div>
+    <div class="item-card">
+      <div class="item-name">シマエナガ</div>
+      <div class="item-cost">111 コイン</div>
+      <div class="item-count" id="count-111-1">0 <span>個</span></div>
+    </div>
 
-<hr>
+    <div class="item-card">
+      <div class="item-name">笹の葉パンダ</div>
+      <div class="item-cost">111 コイン</div>
+      <div class="item-count" id="count-111-2">0 <span>個</span></div>
+    </div>
 
-<label>④ 必要コイン数</label>
+    <div class="item-card">
+      <div class="item-name">はしゃぐ</div>
+      <div class="item-cost">33 コイン</div>
+      <div class="item-count" id="count-33">0 <span>個</span></div>
+    </div>
 
-<div class="result" id="needCoin">0</div>
+    <div class="item-card" style="grid-column: span 2;">
+      <div class="item-name">ハート</div>
+      <div class="item-cost">1 コイン</div>
+      <div class="item-count" id="count-1">0 <span>個</span></div>
+    </div>
 
-</div>
-
-<div class="card">
-
-<h2 style="text-align:center;">⑤ 必要アイテム数</h2>
-
-<table>
-
-<tr>
-<th>アイテム</th>
-<th>個数</th>
-</tr>
-
-<tr>
-<td>🐴 馬車（5555）</td>
-<td id="horse"></td>
-</tr>
-
-<tr>
-<td>🎆 花火（1111）</td>
-<td id="fire"></td>
-</tr>
-
-<tr>
-<td>🌀 トライバル（444）</td>
-<td id="tribal"></td>
-</tr>
-
-<tr>
-<td>🐦 シマエナガ（111）</td>
-<td id="bird"></td>
-</tr>
-
-<tr>
-<td>🎋 笹の葉パンダ（111）</td>
-<td id="panda"></td>
-</tr>
-
-<tr>
-<td>🥳 はしゃぐ（33）</td>
-<td id="party"></td>
-</tr>
-
-<tr>
-<td>❤️ ハート（1）</td>
-<td id="heart"></td>
-</tr>
-
-<tr>
-<td>
-自由入力
-<input class="freeInput" id="freeCoin" type="number" value="500" oninput="calc()">
-</td>
-<td id="free"></td>
-</tr>
-
-</table>
-
-</div>
-
-<div class="footer">
-Pococha Meter Calculator
-</div>
-
+    <!-- 自由入力アイテム -->
+    <div class="custom-item-card">
+      <div class="custom-input-row">
+        <span style="font-weight: bold; font-size: 0.85rem;">自由入力:</span>
+        <input type="number" id="customCoin" placeholder="コイン数" oninput="calculate()">
+        <span style="font-size: 0.85rem;">コイン</span>
+      </div>
+      <div class="item-count" id="count-custom">0 <span>個</span></div>
+    </div>
+  </div>
 </div>
 
 <script>
+  // kボタンを押したときの動作（数字に1000を掛ける）
+  function addK(inputId) {
+    const input = document.getElementById(inputId);
+    let val = parseFloat(input.value);
+    if (!isNaN(val)) {
+      input.value = Math.floor(val * 1000);
+      calculate(); // 計算を再実行
+    }
+  }
 
-function round2(v){
-    return Math.ceil(v*100)/100;
-}
+  // 数字をカンマ区切りにする
+  function formatNum(num) {
+    return num.toLocaleString();
+  }
 
-function calc(){
+  // メイン計算処理
+  function calculate() {
+    const target = parseFloat(document.getElementById('targetMeter').value) || 0;
+    const current = parseFloat(document.getElementById('currentMeter').value) || 0;
 
-let goal = Number(document.getElementById("goal").value);
-let now = Number(document.getElementById("now").value);
+    // ③ 必要なメーター（0未満にならないようにする）
+    let neededMeterVal = target - current;
+    if (neededMeterVal < 0) neededMeterVal = 0;
 
-let needMeter = Math.max(goal-now,0);
+    // k換算表記
+    const kVal = (neededMeterVal / 1000).toFixed(1).replace(/\.0$/, '');
 
-let coin = needMeter/4;
+    // 画面表示更新
+    document.getElementById('neededMeter').textContent = formatNum(neededMeterVal);
+    document.getElementById('neededMeterK').textContent = `${formatNum(neededMeterVal)} （${kVal} k）`;
 
-document.getElementById("needMeter").innerHTML =
-needMeter.toLocaleString();
+    // ④ 必要なコイン数（メーター ÷ 4）
+    const neededCoinsVal = Math.ceil(neededMeterVal / 4);
+    document.getElementById('neededCoins').textContent = `${formatNum(neededCoinsVal)} コイン`;
 
-document.getElementById("needCoin").innerHTML =
-Math.ceil(coin).toLocaleString()+" コイン";
+    // 視覚的メーター（プログレスバー）の更新
+    let percentage = 0;
+    if (target > 0) {
+      percentage = Math.min(Math.round((current / target) * 100), 100);
+    }
+    document.getElementById('meterBar').style.width = percentage + '%';
+    document.getElementById('progressText').textContent = percentage + '%';
 
-function set(id,value){
-document.getElementById(id).innerHTML=
-round2(value)+" 個";
-}
+    // ⑤ 各アイテムの必要個数計算（切り上げ：Math.ceil）
+    const items = [
+      { id: 'count-5555', cost: 5555 },
+      { id: 'count-1111', cost: 1111 },
+      { id: 'count-444', cost: 444 },
+      { id: 'count-111-1', cost: 111 },
+      { id: 'count-111-2', cost: 111 },
+      { id: 'count-33', cost: 33 },
+      { id: 'count-1', cost: 1 }
+    ];
 
-set("horse",coin/5555);
-set("fire",coin/1111);
-set("tribal",coin/444);
-set("bird",coin/111);
-set("panda",coin/111);
-set("party",coin/33);
-set("heart",Math.ceil(coin));
+    items.forEach(item => {
+      const count = neededCoinsVal > 0 ? Math.ceil(neededCoinsVal / item.cost) : 0;
+      document.getElementById(item.id).innerHTML = `${formatNum(count)} <span>個</span>`;
+    });
 
-let freeCoin=Number(document.getElementById("freeCoin").value);
-
-if(freeCoin>0){
-document.getElementById("free").innerHTML=
-round2(coin/freeCoin)+" 個";
-}else{
-document.getElementById("free").innerHTML="-";
-}
-
-}
-
-calc();
-
+    // 自由入力アイテムの計算
+    const customCost = parseFloat(document.getElementById('customCoin').value) || 0;
+    if (customCost > 0 && neededCoinsVal > 0) {
+      const customCount = Math.ceil(neededCoinsVal / customCost);
+      document.getElementById('count-custom').innerHTML = `${formatNum(customCount)} <span>個</span>`;
+    } else {
+      document.getElementById('count-custom').innerHTML = `0 <span>個</span>`;
+    }
+  }
 </script>
 
 </body>
