@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Pococha メーター計算</title>
+
+<style>
+body{
+    margin:0;
+    font-family:"Hiragino Sans","Yu Gothic",sans-serif;
+    background:#FFF7F2;
+    color:#333;
+}
+
+.container{
+    max-width:480px;
+    margin:auto;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+    color:#ff6b81;
+    font-size:32px;
+}
+
+.card{
+    background:white;
+    border-radius:18px;
+    padding:18px;
+    margin:15px 0;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+label{
+    font-weight:bold;
+    display:block;
+    margin-bottom:8px;
+}
+
+input{
+    width:100%;
+    font-size:28px;
+    padding:12px;
+    border-radius:12px;
+    border:2px solid #ffd4dc;
+    box-sizing:border-box;
+}
+
+.result{
+    font-size:30px;
+    font-weight:bold;
+    color:#ff4f7a;
+    text-align:center;
+}
+
+.small{
+    text-align:center;
+    margin-top:10px;
+}
+
+.small a{
+    color:#3b82f6;
+    text-decoration:none;
+    font-size:15px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    background:#ff9fb4;
+    color:white;
+    padding:10px;
+}
+
+td{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    font-size:20px;
+}
+
+tr:nth-child(even){
+    background:#fff8fb;
+}
+
+.freeInput{
+    width:90px;
+    font-size:18px;
+}
+
+.footer{
+    text-align:center;
+    margin:30px;
+    color:#888;
+    font-size:13px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>🎁 メーター計算 🎁</h1>
+
+<div class="card">
+
+<label>① 目標メーター</label>
+<input type="number" id="goal" oninput="calc()">
+
+<div class="small">
+<a href="https://one-carat.com/campus/archives/category/streamer-tips/pococha-rank-border" target="_blank">
+📖 メーター参考表を見る
+</a>
+</div>
+
+</div>
+
+<div class="card">
+
+<label>② 今のメーター</label>
+<input type="number" id="now" oninput="calc()">
+
+</div>
+
+<div class="card">
+
+<label>③ 必要メーター</label>
+
+<div class="result" id="needMeter">0</div>
+
+<hr>
+
+<label>④ 必要コイン数</label>
+
+<div class="result" id="needCoin">0</div>
+
+</div>
+
+<div class="card">
+
+<h2 style="text-align:center;">⑤ 必要アイテム数</h2>
+
+<table>
+
+<tr>
+<th>アイテム</th>
+<th>個数</th>
+</tr>
+
+<tr>
+<td>🐴 馬車（5555）</td>
+<td id="horse"></td>
+</tr>
+
+<tr>
+<td>🎆 花火（1111）</td>
+<td id="fire"></td>
+</tr>
+
+<tr>
+<td>🌀 トライバル（444）</td>
+<td id="tribal"></td>
+</tr>
+
+<tr>
+<td>🐦 シマエナガ（111）</td>
+<td id="bird"></td>
+</tr>
+
+<tr>
+<td>🎋 笹の葉パンダ（111）</td>
+<td id="panda"></td>
+</tr>
+
+<tr>
+<td>🥳 はしゃぐ（33）</td>
+<td id="party"></td>
+</tr>
+
+<tr>
+<td>❤️ ハート（1）</td>
+<td id="heart"></td>
+</tr>
+
+<tr>
+<td>
+自由入力
+<input class="freeInput" id="freeCoin" type="number" value="500" oninput="calc()">
+</td>
+<td id="free"></td>
+</tr>
+
+</table>
+
+</div>
+
+<div class="footer">
+Pococha Meter Calculator
+</div>
+
+</div>
+
+<script>
+
+function round2(v){
+    return Math.ceil(v*100)/100;
+}
+
+function calc(){
+
+let goal = Number(document.getElementById("goal").value);
+let now = Number(document.getElementById("now").value);
+
+let needMeter = Math.max(goal-now,0);
+
+let coin = needMeter/4;
+
+document.getElementById("needMeter").innerHTML =
+needMeter.toLocaleString();
+
+document.getElementById("needCoin").innerHTML =
+Math.ceil(coin).toLocaleString()+" コイン";
+
+function set(id,value){
+document.getElementById(id).innerHTML=
+round2(value)+" 個";
+}
+
+set("horse",coin/5555);
+set("fire",coin/1111);
+set("tribal",coin/444);
+set("bird",coin/111);
+set("panda",coin/111);
+set("party",coin/33);
+set("heart",Math.ceil(coin));
+
+let freeCoin=Number(document.getElementById("freeCoin").value);
+
+if(freeCoin>0){
+document.getElementById("free").innerHTML=
+round2(coin/freeCoin)+" 個";
+}else{
+document.getElementById("free").innerHTML="-";
+}
+
+}
+
+calc();
+
+</script>
+
+</body>
+</html>
