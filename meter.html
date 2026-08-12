@@ -307,7 +307,7 @@
 <body>
 
 <div class="container">
-  <h1>✨ メーター＆コイン計算機 ✨</h1>
+  <h1>✨メーター計算機✨</h1>
 
   <!-- 外部参考リンク -->
   <a href="https://one-carat.com/campus/archives/category/streamer-tips/pococha-rank-border" target="_blank" rel="noopener noreferrer" class="ref-link">
@@ -316,20 +316,18 @@
 
   <!-- 入力フォーム -->
   <div class="input-group">
-    <label for="targetMeter">① 目標メーター</label>
-    <div class="input-wrapper">
-      <input type="number" id="targetMeter" placeholder="例: 100000" oninput="calculate()">
-      <button class="btn-k" onclick="addK('targetMeter')">k</button>
-    </div>
+  <label for="targetMeter">① 目標メーター</label>
+  <div class="input-wrapper">
+    <input type="number" id="targetMeter" placeholder="例: 32（=32k）" oninput="calculate()">
   </div>
+</div>
 
   <div class="input-group">
-    <label for="currentMeter">② 今のメーター</label>
-    <div class="input-wrapper">
-      <input type="number" id="currentMeter" placeholder="例: 20000" oninput="calculate()">
-      <button class="btn-k" onclick="addK('currentMeter')">k</button>
-    </div>
+  <label for="currentMeter">② 今のメーター</label>
+  <div class="input-wrapper">
+    <input type="number" id="currentMeter" placeholder="例: 18（=18k）" oninput="calculate()">
   </div>
+</div>
 
   <!-- 視覚的メーター -->
   <div class="meter-visual-zone">
@@ -432,31 +430,27 @@
 </div>
 
 <script>
-  // kボタンを押したときの動作（数字に1000を掛ける）
-  function addK(inputId) {
-    const input = document.getElementById(inputId);
-    let val = parseFloat(input.value);
-    if (!isNaN(val)) {
-      input.value = Math.floor(val * 1000);
-      calculate();
-    }
-  }
-
   // 数字をカンマ区切りにする
   function formatNum(num) {
     return num.toLocaleString();
   }
 
+  // メーター入力はすべてk単位として扱う
+  function meterValue(id) {
+    const v = parseFloat(document.getElementById(id).value) || 0;
+    return v * 1000;
+  }
+
   // メイン計算処理
   function calculate() {
-    const target = parseFloat(document.getElementById('targetMeter').value) || 0;
-    const current = parseFloat(document.getElementById('currentMeter').value) || 0;
+    const target = meterValue('targetMeter');
+    const current = meterValue('currentMeter');
 
     // ③ 必要なメーター（0未満にならないようにする）
     let neededMeterVal = target - current;
     if (neededMeterVal < 0) neededMeterVal = 0;
 
-    // k換算表記（例: 20k）
+    // k換算表記
     const kVal = (neededMeterVal / 1000).toFixed(1).replace(/\.0$/, '');
 
     // 画面表示更新
@@ -475,7 +469,7 @@
     document.getElementById('meterBar').style.width = percentage + '%';
     document.getElementById('progressText').textContent = percentage + '%';
 
-    // ⑤ 各アイテムの必要個数計算（切り上げ：Math.ceil）
+    // ⑤ 各アイテムの必要個数計算（切り上げ）
     const items = [
       { id: 'count-5555', cost: 5555 },
       { id: 'count-1080', cost: 1080 },
@@ -501,6 +495,8 @@
     }
   }
 </script>
+
+
 
 </body>
 </html>
